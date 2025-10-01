@@ -1,0 +1,8 @@
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\bin\Release\CopyTo\ULTRAKILL\BepInEx\patchers\VRPatcher.dll.config
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\bin\Release\CopyTo\ULTRAKILL\BepInEx\patchers\VRPatcher.dll
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\bin\Release\CopyTo\ULTRAKILL\BepInEx\patchers\VRPatcher.pdb
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRPatcher\obj\Release\VRPatcher.csproj.AssemblyReference.cache
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRPatcher\obj\Release\VRPatcher.csproj.CoreCompileInputs.cache
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRPatcher\obj\Release\VRPatcher.csproj.Up2Date
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRPatcher\obj\Release\VRPatcher.dll
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRPatcher\obj\Release\VRPatcher.pdb

@@ -1,0 +1,316 @@
+﻿using AssetsTools.NET;
+using AssetsTools.NET.Extra;
+using BepInEx;
+using BepInEx.Logging;
+using System;
+using System.Collections.Generic;
+
+//using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
+
+namespace VRPatcher
+{
+    public static class VRDependenciesPatcher
+    {
+        internal static string VRPatcherPath => Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+        internal static string ManagedPath => Paths.ManagedPath;
+        internal static string PluginsPath => Path.Combine(ManagedPath, "../Plugins/x86_64");
+        internal static string SubsystemsPath => Path.Combine(ManagedPath, "../UnitySubsystems");
+        internal static string OpenXRSubsystemsPath => Path.Combine(SubsystemsPath, "UnityOpenXR");
+
+
+        /// <summary>
+        /// Called from BepInEx while patching, our entry point for patching.
+        /// Do not change the method name as it is identified by BepInEx. Method must remain public.
+        /// </summary>
+        public static void Initialize()
+        {
+            if (!Directory.Exists(SubsystemsPath))
+                Directory.CreateDirectory(SubsystemsPath);
+
+            if (!Directory.Exists(OpenXRSubsystemsPath))
+                Directory.CreateDirectory(OpenXRSubsystemsPath);
+
+            Console.WriteLine("Copying subsystems...");
+
+            string openXRSubsystemPath = Path.Combine(OpenXRSubsystemsPath, "UnitySubsystemsManifest.json");
+            byte[] openXRSubsystemFile = Properties.Resources.UnitySubsystemsManifest;
+
+            if (!CopyFile(openXRSubsystemPath, openXRSubsystemFile, true))
+            {
+                Console.WriteLine("OpenXR subsystems already present.");
+            }
+            else
+            {
+                Console.WriteLine("OpenXR subsystems successfully copied.");
+            }
+
+            Console.WriteLine("Copying libraries...");
+
+            string openXRPluginPath = Path.Combine(PluginsPath, "UnityOpenXR.dll");
+            byte[] openXRPluginFile = Properties.Resources.UnityOpenXR;
+
+            if (!CopyFile(openXRPluginPath, openXRPluginFile, false))
+            {
+                Console.WriteLine("OpenXR plugin already present.");
+            }
+            else
+            {
+                Console.WriteLine("OpenXR plugin successfully copied.");
+            }
+
+            string openXRLoaderPath = Path.Combine(PluginsPath, "openxr_loader.dll");
+            byte[] openXRLoaderFile = Properties.Resources.openxr_loader;
+
+            if (!CopyFile(openXRLoaderPath, openXRLoaderFile, false))
+            {
+                Console.WriteLine("OpenXR loader already present.");
+            }
+            else
+            {
+                Console.WriteLine("OpenXR loader successfully copied.");
+            }
+
+            /*
+            if (!VREnabler.EnableVROptions(Path.Combine(VREnabler.ManagedPath, "../globalgamemanagers")))
+            {
+                return;
+            }
+            VREnabler.Console.WriteLine("Checking for VR plugins...");
+            string pluginsPath = Path.Combine(VREnabler.PluginsPath, "x86_64");
+            if (!Directory.Exists(pluginsPath))
+            {
+                pluginsPath = VREnabler.PluginsPath;
+            }
+
+            string[] plugins = new string[]
+            {
+                "AudioPluginOculusSpatializer.dll",
+                "openvr_api.dll",
+                "OVRGamepad.dll",
+                "OVRPlugin.dll",
+                "LIV_Bridge.dll",
+                "ShockWaveIMU.dll"
+            };
+            string[] managedLibraries = new string[]
+            {
+                "SteamVR.dll",
+                "SteamVR_Actions.dll",
+                "ShockwaveManager.dll",
+                "Bhaptics.Tact.dll"
+            };
+
+            bool copyPluginsResult = CopyFiles(pluginsPath, plugins, "Plugins.");
+            bool copyManagedLibrariesResult = CopyFiles(VREnabler.ManagedPath, managedLibraries, "Plugins.");
+
+            if (copyPluginsResult || copyManagedLibrariesResult)
+                VREnabler.Console.WriteLine("Successfully copied VR plugins!");
+            else
+                VREnabler.Console.WriteLine("VR plugins already present");
+
+            VREnabler.Console.WriteLine("Checking for binding files...");
+
+
+            if (!Directory.Exists(SteamVRPath))
+            {
+                try
+                {
+                    Directory.CreateDirectory(SteamVRPath);
+                }
+                catch (Exception e)
+                {
+                    VREnabler.Logger.LogError("Could not create SteamVR folder in StreamingAssets: " + e.Message);
+                    VREnabler.Logger.LogError(e.StackTrace);
+                    return;
+                }
+            }
+
+            string[] bindingFiles = new string[]
+            {
+                "actions.json",
+                "binding_holographic_hmd.json",
+                "binding_index_hmd.json",
+                "binding_rift.json",
+                "binding_vive.json",
+                "binding_vive_cosmos.json",
+                "binding_vive_pro.json",
+                "binding_vive_tracker_camera.json",
+                "bindings_holographic_controller.json",
+                "bindings_knuckles.json",
+                "bindings_logitech_stylus.json",
+                "bindings_oculus_touch.json",
+                "bindings_vive_controller.json",
+                "bindings_vive_cosmos_controller.json"
+            };
+
+            if (CopyFiles(SteamVRPath, bindingFiles, "Binds.", true))
+                VREnabler.Console.WriteLine("Successfully copied binding files!");
+            else
+                VREnabler.Console.WriteLine("Binding files already present");*/
+        }
+
+        private static bool CopyFile(string destination, byte[] data, bool replaceIfDifferent)
+        {
+            if (File.Exists(destination))
+            {
+                if (replaceIfDifferent)
+                {
+                    SHA256 sha = SHA256.Create();
+
+                    byte[] sourceHash = sha.ComputeHash(data);
+                    byte[] destHash = sha.ComputeHash(File.ReadAllBytes(destination));
+
+                    if (sourceHash.SequenceEqual(destHash))
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            File.WriteAllBytes(destination, data);
+
+            return true;
+        }
+
+        private static bool EnableVROptions(string path)
+        {
+            AssetsManager assetsManager = new AssetsManager();
+            AssetsFileInstance assetsFileInstance = assetsManager.LoadAssetsFile(path, false, "");
+            assetsManager.LoadClassDatabase(Path.Combine(VRPatcherPath, "cldb.dat"));
+            int num = 0;
+            while ((long)num < (long)((ulong)assetsFileInstance.table.assetFileInfoCount))
+            {
+                try
+                {
+                    AssetFileInfoEx assetInfo = assetsFileInstance.table.GetAssetInfo((long)num);
+                    AssetTypeInstance ati = assetsManager.GetATI(assetsFileInstance.file, assetInfo, false);
+                    AssetTypeValueField assetTypeValueField = (ati != null) ? ati.GetBaseField(0) : null;
+                    AssetTypeValueField assetTypeValueField2 = (assetTypeValueField != null) ? assetTypeValueField.Get("enabledVRDevices") : null;
+                    if (assetTypeValueField2 != null)
+                    {
+                        AssetTypeValueField assetTypeValueField3 = assetTypeValueField2.Get("Array");
+                        if (assetTypeValueField3 != null)
+                        {
+                            AssetTypeValueField assetTypeValueField4 = ValueBuilder.DefaultValueFieldFromArrayTemplate(assetTypeValueField3);
+                            assetTypeValueField4.GetValue().Set("Oculus");
+                            AssetTypeValueField assetTypeValueField5 = ValueBuilder.DefaultValueFieldFromArrayTemplate(assetTypeValueField3);
+                            assetTypeValueField5.GetValue().Set("OpenVR");
+                            AssetTypeValueField assetTypeValueField6 = ValueBuilder.DefaultValueFieldFromArrayTemplate(assetTypeValueField3);
+                            assetTypeValueField6.GetValue().Set("None");
+                            assetTypeValueField3.SetChildrenList(new AssetTypeValueField[]
+                            {
+                                assetTypeValueField6,
+                                assetTypeValueField4,
+                                assetTypeValueField5
+                            });
+                            byte[] array;
+                            using (MemoryStream memoryStream = new MemoryStream())
+                            {
+                                using (AssetsFileWriter assetsFileWriter = new AssetsFileWriter(memoryStream))
+                                {
+                                    assetsFileWriter.bigEndian = false;
+                                    AssetWriters.Write(assetTypeValueField, assetsFileWriter, 0);
+                                    array = memoryStream.ToArray();
+                                }
+                            }
+                            List<AssetsReplacer> list = new List<AssetsReplacer>
+                            {
+                                new AssetsReplacerFromMemory(0, (long)num, (int)assetInfo.curFileType, ushort.MaxValue, array)
+                            };
+                            using (MemoryStream memoryStream2 = new MemoryStream())
+                            {
+                                using (AssetsFileWriter assetsFileWriter2 = new AssetsFileWriter(memoryStream2))
+                                {
+                                    assetsFileInstance.file.Write(assetsFileWriter2, 0L, list, 0U, null);
+                                    assetsFileInstance.stream.Close();
+                                    File.WriteAllBytes(path, memoryStream2.ToArray());
+                                }
+                            }
+                            return true;
+                        }
+                    }
+                }
+                catch
+                {
+                }
+                num++;
+            }
+            Console.WriteLine("VR enable location not found!");
+            return false;
+        }
+
+        private static bool CopyFiles(string destinationPath, string[] fileNames, string embedFolder, bool replaceIfDifferent = false)
+        {
+            DirectoryInfo directoryInfo = new DirectoryInfo(destinationPath);
+            FileInfo[] files = directoryInfo.GetFiles();
+            bool flag = false;
+            Assembly executingAssembly = Assembly.GetExecutingAssembly();
+            string name = executingAssembly.GetName().Name;
+            string[] array = fileNames;
+            for (int i = 0; i < array.Length; i++)
+            {
+                string fileName = array[i];
+                if (!Array.Exists<FileInfo>(files, (FileInfo file) => fileName == file.Name))
+                {
+                    flag = true;
+                    using (Stream manifestResourceStream = executingAssembly.GetManifestResourceStream(name + "." + embedFolder + fileName))
+                    {
+                        using (FileStream fileStream = new FileStream(Path.Combine(directoryInfo.FullName, fileName), FileMode.Create, FileAccess.ReadWrite, FileShare.Delete))
+                        {
+                            Console.WriteLine("Copying " + fileName);
+                            manifestResourceStream.CopyTo(fileStream);
+                        }
+                    }
+                }
+                else if (replaceIfDifferent)
+                {
+                    string resourceFileContent;
+                    using (Stream manifestResourceStream = executingAssembly.GetManifestResourceStream(name + "." + embedFolder + fileName))
+                    {
+                        using (StreamReader reader = new StreamReader(manifestResourceStream))
+                        {
+                            resourceFileContent = reader.ReadToEnd();
+                        }
+                    }
+
+                    FileInfo installedFile = files.First(file => file.Name == fileName);
+                    string installedFileContent = File.ReadAllText(@installedFile.FullName);
+
+                    if (resourceFileContent != installedFileContent)
+                    {
+                        flag = true;
+                        Console.WriteLine("Overwriting " + fileName);
+                        File.WriteAllText(installedFile.FullName, resourceFileContent);
+                    }
+                }
+            }
+            return flag;
+        }
+
+        /// <summary>
+        /// For BepInEx to identify your patcher as a patcher, it must match the patcher contract as outlined in the BepInEx docs:
+        /// https://bepinex.github.io/bepinex_docs/v5.0/articles/dev_guide/preloader_patchers.html#patcher-contract
+        /// It must contain a list of managed assemblies to patch as a public static <see cref="IEnumerable{T}"/> property named TargetDLLs
+        /// </summary>
+        //public static IEnumerable<string> TargetDLLs { get; } = new string[0];
+        public static IEnumerable<string> TargetDLLs { get; } = new[] { "Assembly-CSharp.dll" };
+
+        /// <summary>
+        /// For BepInEx to identify your patcher as a patcher, it must match the patcher contract as outlined in the BepInEx docs:
+        /// https://bepinex.github.io/bepinex_docs/v5.0/articles/dev_guide/preloader_patchers.html#patcher-contract
+        /// It must contain a public static void method named Patch which receives an <see cref="AssemblyDefinition"/> argument,
+        /// which patches each of the target assemblies in the TargetDLLs list.
+        /// 
+        /// We don't actually need to patch any of the managed assemblies, so we are providing an empty method here.
+        /// </summary>
+        /// <param name="ad"></param>
+        public static void Patch(AssemblyDefinition ad) { }
+    }
+}

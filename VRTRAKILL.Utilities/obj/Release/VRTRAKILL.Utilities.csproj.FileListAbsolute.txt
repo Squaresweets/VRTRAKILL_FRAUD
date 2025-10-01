@@ -1,0 +1,6 @@
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\bin\VRTRAKILL.Utilities.dll
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\bin\VRTRAKILL.Utilities.pdb
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRTRAKILL.Utilities\obj\Release\VRTRAKILL.Utilities.csproj.AssemblyReference.cache
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRTRAKILL.Utilities\obj\Release\VRTRAKILL.Utilities.csproj.CoreCompileInputs.cache
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRTRAKILL.Utilities\obj\Release\VRTRAKILL.Utilities.dll
+C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRTRAKILL.Utilities\obj\Release\VRTRAKILL.Utilities.pdb

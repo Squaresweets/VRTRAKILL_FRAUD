@@ -1,0 +1,49 @@
+{
+  "VRTRAKILL Settings": {
+    "VRTRAKILL Keybinds": {
+      "Toggle Desktop View": "T",
+      "Toggle Size Adjustment": "J"
+    },
+    "Movement multiplier": 0.575,
+    "Controller Settings": {
+      "Deadzone (from 0 to 1)": 0.4,
+      "Smooth turning speed": 300.0,
+      "Snap turning": false,
+      "Snap turning angles": 45.0,
+      "Draw controller models": true,
+      "Enable Controller Rumble": true,
+      "Left handed (BROKEN)": false
+    },
+    "Enable controller-based aiming": true,
+    "CBS Settings": {
+      "Enable Crosshair": true,
+      "Crosshair distance": 8.0
+    },
+    "Enable movement-based punching": true,
+    "MBP Settings": {
+      "Velocity-based punching direction": false,
+      "Required speed to punch": 7.5,
+      "WHIPLASH: camera-based aiming": false
+    },
+    "Enable VRAvatar": false,
+    "VRAvatar Settings": {
+      "Enable arms IK": true,
+      "Enable legs IK": true
+    },
+    "UI Interaction Settings": {
+      "UI Size (from 0 to 0.1)": 0.0625,
+      "Controller-based": true,
+      "Controller Lines": {
+        "Enabled": true,
+        "Starting transparency (from 0 to 1)": 0.4,
+        "End transparency (from 0 to 1)": 0.1
+      }
+    },
+    "DesktopView Settings": {
+      "Enabled by default": true,
+      "World view FOV": 90.0,
+      "UI view FOV": 90.0
+    },
+    "Miscellaneous/Unsorted Settings": {}
+  }
+}
