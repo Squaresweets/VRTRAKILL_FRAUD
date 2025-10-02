@@ -347,7 +347,6 @@
     <Compile Include="Systems\VRCamera\Patches\CrashBandicrootCCP.cs" />
     <Compile Include="Systems\VRCamera\VRCameraTurning.cs" />
     <Compile Include="Systems\VRPlayer\VRKeybindsController.cs" />
-    <Compile Include="XRLoaderHelper.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CopyToGameRoot\ULTRAKILL\BepInEx\config\BepInEx.cfg">

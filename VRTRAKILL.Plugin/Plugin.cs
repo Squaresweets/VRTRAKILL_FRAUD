@@ -35,17 +35,7 @@ namespace Plugin
             PatchStuff();
             SceneWorker.Init();
 
-            if (myStaticMB == null)
-            {
-                //Create an empty object called MyStatic
-                GameObject gameObject = new GameObject("MyStatic");
-
-
-                //Add this script to the object
-                myStaticMB = gameObject.AddComponent<MyStaticMB>();
-            }
-
-            myStaticMB.StartCoroutine(InitVRLoader());
+            InitVRLoader();
 
             //InitializeSteamVR();
             //InitVRLoader();
@@ -81,16 +71,8 @@ namespace Plugin
                 Log = Vars.Log,
             }.PatchAll();
         }
-        
-        //Create a class that actually inherits from MonoBehaviour
-        public class MyStaticMB : MonoBehaviour
-        {
-        }
 
-        //Variable reference for the class
-        public static MyStaticMB myStaticMB;
-
-        public static IEnumerator InitVRLoader()
+        public static void InitVRLoader()
         {
             Log.LogMessage("INITILIZING");
             SteamVR_Actions.PreInitialize();
@@ -124,7 +106,6 @@ namespace Plugin
 
             SteamVR_Input.Initialize();
             Systems.Input.SVRActionsManager.Init();
-            yield return null; //I'm not sure why this is done, but an example I took this off used it so who am i to question it
             Log.LogMessage("DONE");
         }
     }
