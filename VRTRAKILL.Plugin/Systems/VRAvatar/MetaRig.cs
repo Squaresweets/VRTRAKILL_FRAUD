@@ -30,7 +30,8 @@ namespace Plugin.Systems.VRAvatar
         public Arm _RWhiplash { get; private set; }
         public Arm _RSandboxer { get; private set; }
 
-        public Arm FeedbackerA { get; private set; } public Arm FeedbackerB { get; private set; }
+        public Arm FeedbackerA { get; private set; }
+        public Arm FeedbackerB { get; private set; }
         public Arm Knuckleblaster { get; private set; }
         public Arm Whiplash { get; private set; }
         public Arm Sandboxer { get; private set; }
@@ -93,10 +94,10 @@ namespace Plugin.Systems.VRAvatar
             }
 
             MR.Pelvis = MR.Root.GetChild(0).GetChild(0).GetChild(1);
-            MR.LeftLeg = Leg.MRPreset(MR.Root.GetChild(0).GetChild(0).GetChild(1).GetChild(0));
-            MR.RightLeg = Leg.MRPreset(MR.Root.GetChild(0).GetChild(0).GetChild(1).GetChild(2));
-            MR.LeftLegIK = Leg.MRIKPreset(MR.Root.GetChild(0).GetChild(0).GetChild(1).GetChild(1));
-            MR.RightLegIK = Leg.MRIKPreset(MR.Root.GetChild(0).GetChild(0).GetChild(1).GetChild(3));
+            //MR.LeftLeg = Leg.MRPreset(MR.Root.GetChild(0).GetChild(0).GetChild(1).GetChild(0));
+            //MR.RightLeg = Leg.MRPreset(MR.Root.GetChild(0).GetChild(0).GetChild(1).GetChild(2));
+            //MR.LeftLegIK = Leg.MRIKPreset(MR.Root.GetChild(0).GetChild(0).GetChild(1).GetChild(1));
+            //MR.RightLegIK = Leg.MRIKPreset(MR.Root.GetChild(0).GetChild(0).GetChild(1).GetChild(3));
 
             MR.Arm_IKPole_Left = MR.Root.GetChild(0).GetChild(1);
             MR.Arm_IKPole_Right = MR.Root.GetChild(0).GetChild(2);

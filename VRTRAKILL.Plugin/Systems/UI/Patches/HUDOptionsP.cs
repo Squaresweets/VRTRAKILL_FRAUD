@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using ULTRAKILL.Portal;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
@@ -112,5 +113,10 @@ namespace Plugin.Systems.UI.Patches
         //    }
         //    return false;
         //}
+
+        [HarmonyPrefix] [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.Setup))] static void PortalRenderFix(ref Camera mainCam)
+        {
+            mainCam = Vars.MainCamera;
+        }
     }
 }

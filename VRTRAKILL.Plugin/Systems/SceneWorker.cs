@@ -9,7 +9,7 @@ namespace Plugin.Systems
     internal static class SceneWorker
     {
         public static void Init()
-        => SceneManager.activeSceneChanged += (x, y) => SceneChanged(y);
+        => SceneManager.activeSceneChanged += (_, y) => SceneChanged(y);
 
         // cool message suppersion :)
         private static void SceneChanged(Scene S)

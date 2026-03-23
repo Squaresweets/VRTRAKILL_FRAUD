@@ -13,6 +13,7 @@ namespace Plugin.Systems.UI
 
         public static void ConvertAllCanvases()
         {
+            if (Vars.MainCamera == null) return;
             UICamera = new GameObject("UI Camera").AddComponent<Camera>();
             UICamera.cullingMask = 1 << (int)Layers.UI;
             UICamera.clearFlags = CameraClearFlags.Depth; UICamera.depth = 1;

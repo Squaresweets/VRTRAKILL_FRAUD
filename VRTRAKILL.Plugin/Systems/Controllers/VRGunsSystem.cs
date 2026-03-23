@@ -11,9 +11,8 @@ namespace Plugin.Systems.Controllers
 
         public Vector3 ArmIKOffset = new Vector3(.05f, .0525f, -.1765f);
 
-        public override void Awake()
+        public void Awake()
         {
-            base.Awake();
             CC = gameObject.GetComponent<VRControllersSystem>();
             GunOffset = CC.GunOffset;
         }

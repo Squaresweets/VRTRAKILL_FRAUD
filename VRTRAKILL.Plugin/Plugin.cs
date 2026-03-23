@@ -36,9 +36,6 @@ namespace Plugin
             SceneWorker.Init();
 
             InitVRLoader();
-
-            //InitializeSteamVR();
-            //InitVRLoader();
         }
 
         private void PatchStuff()
@@ -56,13 +53,13 @@ namespace Plugin
             };
             System.Collections.Generic.List<System.Type> Types = new System.Collections.Generic.List<System.Type>
             {
-                typeof(Systems.Input.ControlMessages.Patches),
+                //typeof(Systems.Input.ControlMessages.Patches),
             };
             //if (Vars.Config.Controllers.EnableHaptics) Types.Add(typeof(Systems.Controllers.Patches.ControllerHaptics));
             //if (Vars.Config.EnableCBS)                 Namespaces.Add(typeof(Systems.Guns.Patches.A).Namespace);
             //if (Vars.Config.EnableMBP)                 Namespaces.Add(typeof(Systems.Arms.Patches.A).Namespace);
             //if (!Vars.Config.MBP.CameraWhiplash)       Namespaces.Add(typeof(Systems.Arms.Patches.Whiplash.A).Namespace);
-            if (Vars.Config.EnableVRBody)              Namespaces.Add(typeof(Systems.VRAvatar.Patches.A).Namespace);
+            //if (Vars.Config.EnableVRBody)              Namespaces.Add(typeof(Systems.VRAvatar.Patches.A).Namespace);
 
             new Patcher(new HarmonyLib.Harmony(PluginInfo.PLUGIN_GUID))
             {

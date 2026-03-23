@@ -24,9 +24,8 @@ namespace Plugin.Systems.Controllers
             Speed = _CurrentVelocity.magnitude;
         }
 
-        public override void Awake()
+        public void Awake()
         {
-            base.Awake();
             CC = gameObject.GetComponent<VRControllersSystem>();
             GunOffset = CC.GunOffset;
             LastPosition = transform.position;

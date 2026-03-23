@@ -66,20 +66,20 @@ namespace Plugin.Systems.VRAvatar
             if (Vars.Config.VRBody.EnableLegsIK)
             {
                 Anim = Rig.GameObjectT.GetComponent<Animator>();
-                AddIK(Rig.LeftLegIK.Foot.gameObject, Rig.LeftLeg.Foot, Pole: Rig.Leg_IKPole_Left);
-                AddIK(Rig.RightLegIK.Foot.gameObject, Rig.RightLeg.Foot, Pole: Rig.Leg_IKPole_Right);
+                //AddIK(Rig.LeftLegIK.Foot.gameObject, Rig.LeftLeg.Foot, Pole: Rig.Leg_IKPole_Left);
+                //AddIK(Rig.RightLegIK.Foot.gameObject, Rig.RightLeg.Foot, Pole: Rig.Leg_IKPole_Right);
 
-                IKFoot LeftLeg = Rig.LeftLeg.Foot.gameObject.AddComponent<IKFoot>();
-                LeftLeg.Anim = this.Anim;
-                LeftLeg.Body = Rig.Root;
-                LeftLeg.FootSpacing = -.3f;
-                IKFoot RightLeg = Rig.RightLeg.Foot.gameObject.AddComponent<IKFoot>();
-                RightLeg.Anim = this.Anim;
-                RightLeg.Body = Rig.Root;
-                RightLeg.FootSpacing = .3f;
+                //IKFoot LeftLeg = Rig.LeftLeg.Foot.gameObject.AddComponent<IKFoot>();
+                //LeftLeg.Anim = this.Anim;
+                //LeftLeg.Body = Rig.Root;
+                //LeftLeg.FootSpacing = -.3f;
+                //IKFoot RightLeg = Rig.RightLeg.Foot.gameObject.AddComponent<IKFoot>();
+                //RightLeg.Anim = this.Anim;
+                //RightLeg.Body = Rig.Root;
+                //RightLeg.FootSpacing = .3f;
 
-                LeftLeg.OtherFoot = RightLeg;
-                RightLeg.OtherFoot = LeftLeg;
+                //LeftLeg.OtherFoot = RightLeg;
+                //RightLeg.OtherFoot = LeftLeg;
             }
 
             #region Dynamic wings
@@ -106,7 +106,7 @@ namespace Plugin.Systems.VRAvatar
             ASC.enabled = false;
             this.gameObject.SetActive(true);
         }
-        
+
         public void LateUpdate()
         {
             if (Rig == null) return;

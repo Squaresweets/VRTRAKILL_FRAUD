@@ -75,7 +75,10 @@ internal class CameraControllerTranspiler
                 .Repeat(matcher => {
                     if (matcher.Instruction.opcode == OpCodes.Ldfld) //If we load a field we need to get rid of the thing currently on the stack (this)
                         matcher.InsertAndAdvance(new CodeInstruction(OpCodes.Pop));
-                    matcher.SetInstructionAndAdvance(new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(Vars), "DominantHand")));
+
+                    CodeInstruction newInstruction = new CodeInstruction(OpCodes.Call, AccessTools.PropertyGetter(typeof(Vars), "DominantHand"));
+                    newInstruction.labels.AddRange(matcher.Instruction.labels);
+                    matcher.SetInstructionAndAdvance(newInstruction);
                     matcher.SetInstructionAndAdvance(new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(GameObject), "get_transform")));
                 })
                 .InstructionEnumeration();

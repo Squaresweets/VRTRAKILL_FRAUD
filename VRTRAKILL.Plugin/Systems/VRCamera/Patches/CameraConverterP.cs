@@ -110,7 +110,7 @@ namespace Plugin.Systems.VRCamera.Patches
         }
 
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(CameraController), nameof(CameraController.Update))]
+        [HarmonyPatch(typeof(CameraController), nameof(CameraController.LateUpdate))]
         static bool DoNothing(CameraController __instance)
         {
             __instance.transform.parent.localPosition = Vector3.zero;
@@ -121,7 +121,7 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(CameraController), nameof(CameraController.GetDefaultPos))]
         static bool GetDefaultPos(ref Vector3 __result)
         {
-            if(Controllers.VRGunsSystem.instance == null) __result = Vector3.zero;
+            if(Controllers.VRGunsSystem.Instance == null) __result = Vector3.zero;
             __result = Vars.DominantHand.transform.position;
             return false;
         }

@@ -447,7 +447,7 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "C:\Work\Mods\Ultrakill\VRTRAKILL-ultra_revamp\VRTRAKILL.Plugin\obj\Release\VRTRAKILL.dll" "C:\Users\matth\Desktop\ULTRAKILL_VR\BepInEx\plugins\VRTRAKILL\VRTRAKILL.dll"
+    <PostBuildEvent>copy /Y "C:\Work\VRTRAKILL_REVAMP\VRTRAKILL.Plugin\obj\Release\VRTRAKILL.dll" "C:\Users\matth\Desktop\ULTRAKILL_VR\BepInEx\plugins\VRTRAKILL\VRTRAKILL.dll"
 start "" "C:\Users\matth\Desktop\ULTRAKILL_VR\ULTRAKILL.exe"</PostBuildEvent>
   </PropertyGroup>
 </Project>
