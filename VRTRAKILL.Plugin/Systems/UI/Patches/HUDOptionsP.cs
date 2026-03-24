@@ -83,40 +83,68 @@ namespace Plugin.Systems.UI.Patches
                 __instance.transform.localScale *= 20;
         }
 
-        //COULDNT BE BOTHERED TO TRANSPILE
-        //This shit just doesn't work oh well
-        //[HarmonyPrefix] [HarmonyPatch(typeof(LimboSkybox), nameof(LimboSkybox.InitializeRT))] static bool LimboSkyBoxFix(LimboSkybox __instance)
-        //{
-        //    int fakeWidth = (int)((float)XRSettings.eyeTextureWidth * 2 / __instance.downscaleFactor);
-        //    int fakeHeight = (int)((float)XRSettings.eyeTextureHeight  * 2/ __instance.downscaleFactor);
-        //    if (__instance.lastWidth != fakeWidth || __instance.lastHeight != fakeHeight)
-        //    {
-        //        if (__instance.skybox)
-        //        {
-        //            __instance.fakeCam.targetTexture = null;
-        //            __instance.skybox.Release();
-        //            if (Application.isPlaying)
-        //            {
-        //                Object.Destroy(__instance.skybox);
-        //            }
-        //        }
-        //        __instance.lastWidth = fakeWidth;
-        //        __instance.lastHeight = fakeHeight;
-        //        var desc = new RenderTextureDescriptor(fakeWidth, fakeHeight, RenderTextureFormat.ARGB32);
-        //        desc.vrUsage = VRTextureUsage.TwoEyes;  // important
-        //        desc.depthBufferBits = 24;
-        //        __instance.skybox = new RenderTexture(desc);
-        //        __instance.fakeCam.targetTexture = __instance.skybox;
-        //        Shader.SetGlobalTexture("_LimboSky", __instance.skybox);
-        //        Shader.SetGlobalFloat("_LimboSkyWidth", (float)fakeWidth);
-        //        Shader.SetGlobalFloat("_LimboSkyHeight", (float)fakeHeight);
-        //    }
-        //    return false;
-        //}
-
-        [HarmonyPrefix] [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.Setup))] static void PortalRenderFix(ref Camera mainCam)
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(LimboSkybox), nameof(LimboSkybox.UpdateCamera))]
+        static bool LimboFix(Camera cam, LimboSkybox __instance)
         {
-            mainCam = Vars.MainCamera;
+            if (!__instance.isActiveAndEnabled)
+            {
+                return false;
+            }
+            __instance.InitializeRT();
+            if (Application.isPlaying)
+            {
+                __instance.playerCam = __instance.cc.cam;
+            }
+            if (cam != null)
+            {
+                __instance.playerCam = cam;
+            }
+            if (__instance.playerCam == null)
+            {
+                return false;
+            }
+            Vector3 vector = (__instance.playerCam.transform.position - __instance.playerStartPos) / 16f;
+            float num = __instance.lockMinimumHeight ? Mathf.Max(vector.y, 0f) : vector.y;
+            __instance.fakeCam.transform.position = __instance.fakeCamStart.position + new Vector3(vector.x, num, vector.z);
+            __instance.fakeCam.transform.rotation = __instance.playerCam.transform.rotation;
+            __instance.fakeCam.cullingMask = __instance.playerCam.cullingMask;
+            __instance.fakeCam.fieldOfView = __instance.playerCam.fieldOfView;
+            __instance.fakeCam.targetTexture = __instance.skybox;
+
+            __instance.fakeCam.projectionMatrix = __instance.playerCam.projectionMatrix; //ONLY ADDED LINE
+
+            Shader.SetGlobalTexture("_LimboSky", __instance.skybox);
+            Shader.SetGlobalFloat("_LimboSkyWidth", (float)__instance.lastWidth);
+            Shader.SetGlobalFloat("_LimboSkyHeight", (float)__instance.lastHeight);
+            __instance.fakeCam.Render();
+
+            return false;
+        }
+
+        public static Vector3 GetEyePosition(Camera.StereoscopicEye eye)
+        {
+            Vector3 posLeft;
+            UnityEngine.XR.InputDevice device = InputDevices.GetDeviceAtXRNode(eye == Camera.StereoscopicEye.Left ? XRNode.LeftEye : XRNode.RightEye);
+            if (device.isValid)
+            {
+                if (device.TryGetFeatureValue(eye == Camera.StereoscopicEye.Left ? UnityEngine.XR.CommonUsages.leftEyePosition : UnityEngine.XR.CommonUsages.rightEyePosition, out posLeft))
+                    return posLeft;
+            }
+            return default(Vector3);
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.Setup))]
+        static void PortalRenderFix(ref Camera mainCam)
+        {
+            //mainCam = Vars.MainCamera;
+        }
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
+        static void PortalRenderFix2(PortalManagerV2 __instance)
+        {
+            //__instance.mainCamera = Vars.MainCamera;
         }
     }
 }

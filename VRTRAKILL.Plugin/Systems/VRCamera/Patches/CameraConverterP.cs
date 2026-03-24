@@ -19,8 +19,8 @@ namespace Plugin.Systems.VRCamera.Patches
             Container = new GameObject("Main Camera Rig");
             Container.transform.parent = Vars.MainCamera.transform.parent;
 
-            Container.transform.localPosition = new Vector3(0, -4.3f, 0);
-            Container.transform.localRotation = Vars.MainCamera.transform.rotation;
+            Container.transform.localPosition = Vector3.zero;
+            Container.transform.localRotation = Quaternion.identity;
 
             Container.AddComponent<VRCameraTurning>();
 
@@ -113,7 +113,8 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(CameraController), nameof(CameraController.LateUpdate))]
         static bool DoNothing(CameraController __instance)
         {
-            __instance.transform.parent.localPosition = Vector3.zero;
+            //__instance.transform.position = Vars.MainCamera.transform.position;
+            //__instance.transform.rotation = Vars.MainCamera.transform.rotation;
             // do nothing
             return false;
         }
