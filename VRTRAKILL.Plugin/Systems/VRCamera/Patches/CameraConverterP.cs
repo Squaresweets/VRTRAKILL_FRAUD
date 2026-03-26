@@ -1,6 +1,9 @@
 ﻿using HarmonyLib;
+using Plugin.Systems.Input;
 using System.Collections.Generic;
+using ULTRAKILL.Portal;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.XR;
 using UnityEngine.XR;
 using UnityEngine.XR.Management;
@@ -12,39 +15,44 @@ namespace Plugin.Systems.VRCamera.Patches
         // ty huskvr you pretty
         public static GameObject Container;
         public static Camera DesktopWorldCam, DesktopUICam;
+        public static Transform headPos;
 
         static Quaternion startingRotation;
-        [HarmonyPrefix] [HarmonyPatch(typeof(NewMovement), nameof(NewMovement.Start))] public static void Containerize()
+        [HarmonyPrefix] [HarmonyPatch(typeof(NewMovement), nameof(NewMovement.Start))] public static void Containerize(NewMovement __instance)
         {
-            Container = new GameObject("Main Camera Rig");
-            Container.transform.parent = Vars.MainCamera.transform.parent;
+            CameraController cc = __instance.cc;
 
-            Container.transform.localPosition = Vector3.zero;
-            Container.transform.localRotation = Quaternion.identity;
-
+            Container = __instance.gameObject;
             Container.AddComponent<VRCameraTurning>();
-
-            Vars.MainCamera.transform.parent = Container.transform;
-            //Vars.MainCamera.GetComponent<SteamVR_TrackedObject>().origin = Container.transform;
-            //Vars.UICamera.transform.parent = Container.transform;
 
             #region Desktop View
             DesktopWorldCam = new GameObject("Desktop World Camera").AddComponent<Camera>();
             DesktopWorldCam.transform.parent = Vars.MainCamera.transform;
             DesktopWorldCam.transform.localPosition = Vector3.zero;
             DesktopWorldCam.gameObject.AddComponent<DesktopCamera>();
-            
             DesktopUICam = new GameObject("Desktop UI Camera").AddComponent<Camera>();
             DesktopUICam.transform.parent = Vars.MainCamera.transform;
             DesktopUICam.transform.localPosition = Vector3.zero;
             DesktopUICam.gameObject.AddComponent<DesktopUICamera>();
-            
             if (!Vars.Config.DesktopView.Enabled)
             {
                 DesktopWorldCam.gameObject.SetActive(false);
                 DesktopUICam.gameObject.SetActive(false);
             }
             #endregion
+
+            //Move the actual camera to a child so we can do more stuff with it
+
+            //cameraChild = new GameObject("Camera child");
+            //cameraChild.transform.SetParent(cc.transform, false);
+            //cameraChild.AddComponent<Camera>().CopyFrom(cc.cam);
+            //GameObject.DestroyImmediate(cc.cam);
+            //cc.cam = cameraChild.GetComponent<Camera>();
+
+            headPos = new GameObject("Head pos").transform;
+            headPos.gameObject.AddComponent<SteamVR_TrackedObject>();
+
+            cc.cam.targetTexture = XRGeneralSettings.Instance.Manager.activeLoader.GetLoadedSubsystem<XRDisplaySubsystem>().GetRenderTextureForRenderPass(0);
         }
         [HarmonyPostfix] [HarmonyPatch(typeof(NewMovement), nameof(NewMovement.GetHurt))] public static void FixWeirdDeathThing(NewMovement __instance)
         {
@@ -74,50 +82,41 @@ namespace Plugin.Systems.VRCamera.Patches
             __instance.cam.cullingMask |= 1 << (int)Layers.AlwaysOnTop;
             __instance.hudCamera.enabled = false;
 
-            //__instance.hudCamera.depth++;
-
             XRSettings.gameViewRenderMode = GameViewRenderMode.RightEye;
 
             // for some particular reason destroying it is a bad idea.
             GameObject.Find("Virtual Camera").SetActive(false);
         }
-        [HarmonyPostfix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))] static void AddSVRCam(CameraController __instance)
-        {
 
-            //GameObject.DestroyImmediate(__instance.GetComponent<AudioLowPassFilter>());
-            __instance.cam.targetTexture = XRGeneralSettings.Instance.Manager.activeLoader.GetLoadedSubsystem<XRDisplaySubsystem>().GetRenderTextureForRenderPass(0);
-
-            //SteamVR_Camera c = __instance.gameObject.AddComponent<SteamVR_Camera>();
-            //c.Expand();
-            //SteamVR_TrackedObject t = GameObject.FindObjectOfType<SteamVR_TrackedObject>();
-            //Plugin.Log.LogMessage("Parent:" + c.head.transform.name);
-            //Plugin.Log.LogMessage("Parent:" + t.transform.GetChild(0).name);
-
-            //__instance.gameObject.AddComponent<TrackedPoseDriver>();
-            //tracker.origin = Container.transform;
-
-            //Transform origin = new GameObject().transform;
-            //origin.transform.parent = __instance.transform.parent;
-            //origin.transform.position = __instance.transform.position;
-            //offset = origin.transform.localPosition;
-            ////origin.transform.position = __instance.transform.position;
-            //__instance.transform.parent = origin;
-            //__instance.gameObject.AddComponent<SteamVR_TrackedObject>().origin = origin;
-            __instance.gameObject.AddComponent<SteamVR_TrackedObject>();
-
-            //tracker.origin = origin;
-            //__instance.gameObject.AddComponent<SteamVR_Render>();        // Create a new camera GameObject
-        }
-
-        [HarmonyPrefix]
+        static float rotationYOffset;
+        [HarmonyPostfix]
         [HarmonyPatch(typeof(CameraController), nameof(CameraController.LateUpdate))]
-        static bool DoNothing(CameraController __instance)
+        static void HandleRotationsAndPositions(CameraController __instance)
         {
-            //__instance.transform.position = Vars.MainCamera.transform.position;
-            //__instance.transform.rotation = Vars.MainCamera.transform.rotation;
             // do nothing
-            return false;
+            if (!__instance.nm || __instance.platformerCamera) return;
+
+            __instance.transform.localPosition = Vector3.zero;
+
+            __instance.rotationX = -headPos.localEulerAngles.x;
+            __instance.rotationY = headPos.localEulerAngles.y + rotationYOffset + InputVars.TurnOffset;
+            __instance.tiltRotationZ = headPos.localEulerAngles.z;
+            __instance.ApplyRotations();
+
+            __instance.transform.localPosition = headPos.position;
         }
+
+        [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Transform))]
+        static void TransformBefore(CameraController __instance, ref float __state)
+        {
+            __state = __instance.rotationY;
+        }
+        [HarmonyPostfix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Transform))]
+        static void TransformAfter(CameraController __instance, ref float __state)
+        {
+            rotationYOffset += __instance.rotationY - __state;
+        }
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(CameraController), nameof(CameraController.GetDefaultPos))]
         static bool GetDefaultPos(ref Vector3 __result)
@@ -125,6 +124,14 @@ namespace Plugin.Systems.VRCamera.Patches
             if(Controllers.VRGunsSystem.Instance == null) __result = Vector3.zero;
             __result = Vars.DominantHand.transform.position;
             return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.Render))]
+        static void PortalRenderFix2(PortalRenderV2 __instance)
+        {
+            if(__instance.portalCam)
+            __instance.portalCam.stereoTargetEye = StereoTargetEyeMask.None;
         }
     }
 }

@@ -59,7 +59,7 @@ namespace Plugin.Systems
             {
                 if (_MainCamera == null)
                 {
-                    _MainCamera = GameObject.Find("Main Camera")?.gameObject.GetComponent<Camera>();
+                    _MainCamera = GameObject.Find("Main Camera")?.gameObject.GetComponentInChildren<Camera>();
                     return _MainCamera;
                 }
                 else return _MainCamera;

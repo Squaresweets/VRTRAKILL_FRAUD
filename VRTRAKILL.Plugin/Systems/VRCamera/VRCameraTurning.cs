@@ -8,38 +8,18 @@ namespace Plugin.Systems.VRCamera
 {
     internal class VRCameraTurning : MonoSingleton<VRCameraTurning>
     {
-        Vector2 TurnVector; float TurnOffset;
-
+        private bool IsTurning; private float SnapTurnTimer;
         public void Update()
         {
-            TurnVector = InputVars.TurnVector;
-            TurnOffset = InputVars.TurnOffset;
-
-            if (Vars.Config.Controllers.SnapTurn) StartCoroutine(SnapTurn());
-            else StartCoroutine(SmoothTurn());
-
-            // Follow MC rotation
-            if (NewMovement.Instance.dead) return;
-            NewMovement.Instance.gameObject.transform.rotation =
-                Quaternion.Euler(NewMovement.Instance.transform.rotation.eulerAngles.x,
-                                 Vars.MainCamera.transform.rotation.eulerAngles.y,
-                                 NewMovement.Instance.transform.rotation.eulerAngles.z);
-
-            transform.rotation = Quaternion.Euler(0f, InputVars.TurnOffset, 0f);
-        }
-
-        private IEnumerator SmoothTurn()
-        {
+            if (!Vars.Config.Controllers.SnapTurn)
+            {
                 if (InputVars.TurnVector.x > 0 + Vars.Config.Controllers.Deadzone)
                     InputVars.TurnOffset += Vars.Config.Controllers.SmoothSpeed * Time.deltaTime;
                 if (InputVars.TurnVector.x < 0 - Vars.Config.Controllers.Deadzone)
                     InputVars.TurnOffset -= Vars.Config.Controllers.SmoothSpeed * Time.deltaTime;
-                yield return new WaitForEndOfFrame();
-        }
-
-        private bool IsTurning; private float SnapTurnTimer;
-        private IEnumerator SnapTurn()
-        {
+            }
+            else
+            {
                 if (IsTurning)
                 {
                     SnapTurnTimer += Time.deltaTime;
@@ -52,7 +32,7 @@ namespace Plugin.Systems.VRCamera
                     else if (InputVars.TurnVector.x < 0 - Vars.Config.Controllers.Deadzone)
                     { IsTurning = true; InputVars.TurnOffset -= Vars.Config.Controllers.SnapAngles; }
                 }
-                yield return new WaitForEndOfFrame();
+            }
         }
     }
 }
