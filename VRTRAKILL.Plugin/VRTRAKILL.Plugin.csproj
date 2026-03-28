@@ -345,7 +345,7 @@
     <Compile Include="Systems\VRCamera\Patches\A.cs" />
     <Compile Include="Systems\VRCamera\Patches\CameraConverterP.cs" />
     <Compile Include="Systems\VRCamera\Patches\CrashBandicrootCCP.cs" />
-    <Compile Include="Systems\VRCamera\VRCameraTurning.cs" />
+    <Compile Include="Systems\VRCamera\VRControllerLocations.cs" />
     <Compile Include="Systems\VRPlayer\VRKeybindsController.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -4,6 +4,7 @@ using Plugin.Systems.Arms;
 using Plugin.Systems.Controllers;
 using UnityEngine;
 using Valve.VR;
+using VRBasePlugin.Systems.VRCamera;
 
 namespace Plugin.Patches.Controllers;
 
@@ -19,8 +20,7 @@ namespace Plugin.Patches.Controllers;
         LCon.RenderModelOffsetPos = new Vector3(.055f, -.1f, -.1f);
         LCon.RenderModelOffsetEulerAngles = new Vector3(75, 0, 0);
         LCon.RenderModelOffsetScale = new Vector3(.65f, .65f, .65f);
-
-        LHGO.transform.parent = Vars.VRCameraContainer.transform;
+        LCon.source = SteamVR_Input_Sources.LeftHand;
 
         GameObject RHGO = CreateController("Right Controller", SteamVR_Input_Sources.RightHand);
 
@@ -28,8 +28,7 @@ namespace Plugin.Patches.Controllers;
         RCon.RenderModelOffsetPos = new Vector3(-.015f, -.105f, -.15f);
         RCon.RenderModelOffsetEulerAngles = new Vector3(75, 0, 0);
         RCon.RenderModelOffsetScale = new Vector3(-.65f, .65f, .65f);
-
-        RHGO.transform.parent = Vars.VRCameraContainer.transform;
+        RCon.source = SteamVR_Input_Sources.RightHand;
 
         if (Vars.Config.Controllers.DrawControllers)
         {
@@ -59,19 +58,19 @@ namespace Plugin.Patches.Controllers;
     private static GameObject CreateController(string Name, SteamVR_Input_Sources Source)
     {
         GameObject GO = new GameObject(Name) { layer = (int)Layers.IgnoreRaycast };
-        SteamVR_Behaviour_Pose Controller = GO.AddComponent<SteamVR_Behaviour_Pose>();
-        //Controller.onTransformUpdatedEvent += VRControllersSystem.OnTransformUpdatedH;
-        if (Source == SteamVR_Input_Sources.LeftHand)
-        {
-            Controller.poseAction = SteamVR_Actions._default.LeftPose;
-            Controller.inputSource = SteamVR_Input_Sources.LeftHand;
-        }
-        else if (Source == SteamVR_Input_Sources.RightHand)
-        {
-            Controller.poseAction = SteamVR_Actions._default.RightPose;
-            Controller.inputSource = SteamVR_Input_Sources.RightHand;
-        }
-        else throw new System.NotImplementedException();
+        //SteamVR_Behaviour_Pose Controller = GO.AddComponent<SteamVR_Behaviour_Pose>();
+        ////Controller.onTransformUpdatedEvent += VRControllersSystem.OnTransformUpdatedH;
+        //if (Source == SteamVR_Input_Sources.LeftHand)
+        //{
+            //Controller.poseAction = SteamVR_Actions._default.LeftPose;
+        //    Controller.inputSource = SteamVR_Input_Sources.LeftHand;
+        //}
+        //else if (Source == SteamVR_Input_Sources.RightHand)
+        //{
+        //    Controller.poseAction = SteamVR_Actions._default.RightPose;
+        //    Controller.inputSource = SteamVR_Input_Sources.RightHand;
+        //}
+        //else throw new System.NotImplementedException();
         return GO;
     }
     private static GameObject CreateControllerModel(SteamVR_Input_Sources Source, out GameObject SandboxRM, string Name = "Model")

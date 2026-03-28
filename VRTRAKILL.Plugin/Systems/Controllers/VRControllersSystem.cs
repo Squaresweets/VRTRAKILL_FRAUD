@@ -1,5 +1,7 @@
-﻿using UnityEngine;
+﻿using Plugin.Systems.VRCamera.Patches;
+using UnityEngine;
 using Valve.VR;
+using VRBasePlugin.Systems.VRCamera;
 using VRTRAKILL.Utilities;
 
 namespace Plugin.Systems.Controllers
@@ -14,6 +16,8 @@ namespace Plugin.Systems.Controllers
 
         public GameObject GunOffset = new GameObject("Gun Offset") { layer = (int)Layers.IgnoreRaycast };
         public GameObject ArmOffset = new GameObject("Arm Offset") { layer = (int)Layers.IgnoreRaycast };
+
+        public SteamVR_Input_Sources source;
 
         LineRenderer LR; Vector3 EndPosition;
         public float DefaultLength => Vars.Config.CBS.CrosshairDistance;
@@ -76,6 +80,11 @@ namespace Plugin.Systems.Controllers
         }
         public void Update()
         {
+            if (source == SteamVR_Input_Sources.LeftHand)
+                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.leftPos, VRControllerLocations.Instance.leftRot);
+            else
+                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.rightPos, VRControllerLocations.Instance.rightRot);
+
             // controller-based ui interaction
             if (Vars.Config.UIInteraction.ControllerBased) CPRaycast();
             if (Vars.Config.UIInteraction.ControllerLines.Enabled) DrawControllerLines();

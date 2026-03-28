@@ -48,8 +48,6 @@ namespace Plugin.Systems
         #endregion
 
         #region Cameras
-        public static GameObject VRCameraContainer
-            => VRCamera.Patches.CameraConverterP.Container;
         private static Camera _MainCamera;
         public static Vector3 punchDirection;
 

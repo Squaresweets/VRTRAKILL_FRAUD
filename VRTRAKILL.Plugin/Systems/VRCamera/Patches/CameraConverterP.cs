@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Plugin.Systems.Input;
+using System;
 using System.Collections.Generic;
 using ULTRAKILL.Portal;
 using UnityEngine;
@@ -8,28 +9,37 @@ using UnityEngine.InputSystem.XR;
 using UnityEngine.XR;
 using UnityEngine.XR.Management;
 using Valve.VR;
+using VRBasePlugin.Systems.VRCamera;
 namespace Plugin.Systems.VRCamera.Patches
 {
     [HarmonyPatch] public class CameraConverterP
     {
         // ty huskvr you pretty
-        public static GameObject Container;
         public static Camera DesktopWorldCam, DesktopUICam;
-        public static Transform headPos;
 
-        static Quaternion startingRotation;
-        [HarmonyPrefix] [HarmonyPatch(typeof(NewMovement), nameof(NewMovement.Start))] public static void Containerize(NewMovement __instance)
+        [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))] static void ConvertCameras(CameraController __instance)
         {
-            CameraController cc = __instance.cc;
+            while (__instance.cam == null && __instance.hudCamera == null) {}
 
-            Container = __instance.gameObject;
-            Container.AddComponent<VRCameraTurning>();
+            __instance.cam.nearClipPlane = .01f;
+            __instance.cam.stereoTargetEye = StereoTargetEyeMask.Both;
+
+            //// some binary magic (that i don't understand) to enable the layer with the hands
+            __instance.cam.cullingMask |= 1 << (int)Layers.AlwaysOnTop;
+            __instance.hudCamera.enabled = false;
+
+            XRSettings.gameViewRenderMode = GameViewRenderMode.RightEye;
+            __instance.cam.targetTexture = XRGeneralSettings.Instance.Manager.activeLoader.GetLoadedSubsystem<XRDisplaySubsystem>().GetRenderTextureForRenderPass(0);
+
+            // for some particular reason destroying it is a bad idea.
+            GameObject.Find("Virtual Camera").SetActive(false);
 
             #region Desktop View
             DesktopWorldCam = new GameObject("Desktop World Camera").AddComponent<Camera>();
             DesktopWorldCam.transform.parent = Vars.MainCamera.transform;
             DesktopWorldCam.transform.localPosition = Vector3.zero;
             DesktopWorldCam.gameObject.AddComponent<DesktopCamera>();
+
             DesktopUICam = new GameObject("Desktop UI Camera").AddComponent<Camera>();
             DesktopUICam.transform.parent = Vars.MainCamera.transform;
             DesktopUICam.transform.localPosition = Vector3.zero;
@@ -40,19 +50,6 @@ namespace Plugin.Systems.VRCamera.Patches
                 DesktopUICam.gameObject.SetActive(false);
             }
             #endregion
-
-            //Move the actual camera to a child so we can do more stuff with it
-
-            //cameraChild = new GameObject("Camera child");
-            //cameraChild.transform.SetParent(cc.transform, false);
-            //cameraChild.AddComponent<Camera>().CopyFrom(cc.cam);
-            //GameObject.DestroyImmediate(cc.cam);
-            //cc.cam = cameraChild.GetComponent<Camera>();
-
-            headPos = new GameObject("Head pos").transform;
-            headPos.gameObject.AddComponent<SteamVR_TrackedObject>();
-
-            cc.cam.targetTexture = XRGeneralSettings.Instance.Manager.activeLoader.GetLoadedSubsystem<XRDisplaySubsystem>().GetRenderTextureForRenderPass(0);
         }
         [HarmonyPostfix] [HarmonyPatch(typeof(NewMovement), nameof(NewMovement.GetHurt))] public static void FixWeirdDeathThing(NewMovement __instance)
         {
@@ -71,39 +68,50 @@ namespace Plugin.Systems.VRCamera.Patches
             __instance.gameObject.AddComponent<VRPlayer.VRKeybindsController>();
         }
 
-        [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))] static void ConvertCameras(CameraController __instance)
-        {
-            while (__instance.cam == null && __instance.hudCamera == null) {}
 
-            __instance.cam.nearClipPlane = .01f;
-            __instance.cam.stereoTargetEye = StereoTargetEyeMask.Both;
-
-            //// some binary magic (that i don't understand) to enable the layer with the hands
-            __instance.cam.cullingMask |= 1 << (int)Layers.AlwaysOnTop;
-            __instance.hudCamera.enabled = false;
-
-            XRSettings.gameViewRenderMode = GameViewRenderMode.RightEye;
-
-            // for some particular reason destroying it is a bad idea.
-            GameObject.Find("Virtual Camera").SetActive(false);
-        }
-
-        static float rotationYOffset;
         [HarmonyPostfix]
         [HarmonyPatch(typeof(CameraController), nameof(CameraController.LateUpdate))]
         static void HandleRotationsAndPositions(CameraController __instance)
         {
             // do nothing
-            if (!__instance.nm || __instance.platformerCamera) return;
+            if (!__instance.nm) return;
 
-            __instance.transform.localPosition = Vector3.zero;
-
-            __instance.rotationX = -headPos.localEulerAngles.x;
-            __instance.rotationY = headPos.localEulerAngles.y + rotationYOffset + InputVars.TurnOffset;
-            __instance.tiltRotationZ = headPos.localEulerAngles.z;
+            __instance.rotationX = -VRControllerLocations.Instance.headRot.eulerAngles.x;
+            __instance.rotationY = VRControllerLocations.Instance.headRot.eulerAngles.y + InputVars.TurnOffset;
+            __instance.tiltRotationZ = VRControllerLocations.Instance.headRot.eulerAngles.z;
             __instance.ApplyRotations();
 
-            __instance.transform.localPosition = headPos.position;
+            //Vector3 headLocalPos = __instance.gravityRotation * Quaternion.AngleAxis(InputVars.TurnOffset, Vector3.up) * VRControllerLocations.Instance._head.position;
+            //__instance.transform.position = __instance.transform.parent.position + headLocalPos;
+
+            //PortalHandle hitPortal;
+            //if (PortalManagerV2.Instance.Scene.FindPortalBetween(__instance.transform.parent.position, __instance.transform.position, out hitPortal, out _, out _, true))
+            //{
+            //    Matrix4x4 travelmatrix = PortalManagerV2.Instance.Scene.GetPortalObject(hitPortal).travelMatrix;
+
+            //    __instance.transform.position = travelmatrix.MultiplyPoint3x4(__instance.transform.position);
+            //    __instance.transform.rotation = travelmatrix.rotation * __instance.transform.rotation;
+            //}
+
+            PortalAwareSetTransformFromBody(__instance.transform, VRControllerLocations.Instance.headPos, __instance.transform.rotation);
+        }
+
+        public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation, bool takeTurnOffsetIntoAccount = false)
+        {
+            //if (takeTurnOffsetIntoAccount) worldRotation *= Quaternion.Euler(0, -InputVars.TurnOffset, 0);
+            CameraController cc = CameraController.Instance;
+            Vector3 transformedLocalPos = cc.gravityRotation * Quaternion.AngleAxis(InputVars.TurnOffset, Vector3.up) * localPosition;
+            t.position = cc.transform.parent.position + transformedLocalPos;
+            t.rotation = worldRotation;
+
+            PortalHandle hitPortal;
+            if (PortalManagerV2.Instance.Scene.FindPortalBetween(cc.transform.parent.position, t.position, out hitPortal, out _, out _, true))
+            {
+                Matrix4x4 travelmatrix = PortalManagerV2.Instance.Scene.GetPortalObject(hitPortal).travelMatrix;
+
+                t.position = travelmatrix.MultiplyPoint3x4(t.position);
+                t.rotation = travelmatrix.rotation * t.rotation;
+            }
         }
 
         [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Transform))]
@@ -114,7 +122,7 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPostfix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Transform))]
         static void TransformAfter(CameraController __instance, ref float __state)
         {
-            rotationYOffset += __instance.rotationY - __state;
+            InputVars.TurnOffset += __instance.rotationY - __state;
         }
 
         [HarmonyPrefix]

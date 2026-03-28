@@ -33,7 +33,7 @@ namespace Plugin.Systems.VRAvatar
 
         public void Start()
         {
-            Rig = Rig ?? MetaRig.CreateVCustomPreset(Vars.VRCameraContainer, "VR Avatar");
+            Rig = Rig ?? MetaRig.CreateVCustomPreset(null, "VR Avatar");
             VRTRAKILL.Utilities.Unity.RecursiveChangeLayer(Rig.GameObjectT.gameObject, (int)Layers.AlwaysOnTop);
 
             // transform shenanigans (necessary)

@@ -73,7 +73,7 @@ namespace Plugin.Patches.Controllers;
             case "rumble.coin_toss":
             case "rumble.whiplash.throw":
             case "rumble.whiplash.pull":
-                return Vars.NDHC.GetComponent<SteamVR_Behaviour_Pose>().inputSource;
+                return Vars.NDHC.CC.source;
 
             case "rumble.gun.fire":
             case "rumble.gun.fire_strong":
@@ -85,7 +85,7 @@ namespace Plugin.Patches.Controllers;
             case "rumble.gun.sawblade":
             case "rumble.gun.revolver_charge":
             case "rumble.magnet_released":
-                return Vars.DHC.GetComponent<SteamVR_Behaviour_Pose>().inputSource;
+                return Vars.DHC.CC.source;
 
             default:
                 Debug.LogError("No intensity found for key: " + Key);
