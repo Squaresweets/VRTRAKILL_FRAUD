@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.XR;
 using Valve.VR;
 
 namespace VRBasePlugin.Systems.VRCamera
@@ -15,7 +16,6 @@ namespace VRBasePlugin.Systems.VRCamera
     {
         public Vector3 headPos;
         public Quaternion headRot = Quaternion.identity;
-        private Transform _head;
 
         public Vector3 leftPos;
         public Quaternion leftRot = Quaternion.identity;
@@ -25,15 +25,24 @@ namespace VRBasePlugin.Systems.VRCamera
         public Quaternion rightRot = Quaternion.identity;
         private Transform _right;
 
+        public Vector3 leftEyeOffset;
+        public Vector3 rightEyeOffset;
+
+        public void CalculateEyeOffsets()
+        {
+            leftEyeOffset = Quaternion.Inverse(InputTracking.GetLocalRotation(XRNode.Head)) * (InputTracking.GetLocalPosition(XRNode.LeftEye) - InputTracking.GetLocalPosition(XRNode.Head));
+            rightEyeOffset = Quaternion.Inverse(InputTracking.GetLocalRotation(XRNode.Head)) * (InputTracking.GetLocalPosition(XRNode.RightEye) - InputTracking.GetLocalPosition(XRNode.Head));
+        }
         IEnumerator Start()
         {
             transform.position = Vector3.zero; //IK its unneccessary but just make sure
 
-            Debug.LogError("TESTING");
-            if (_head != null) GameObject.DestroyImmediate(_head.gameObject);
-            _head = new GameObject("Head").transform;
-            _head.SetParent(transform);
-            _head.gameObject.AddComponent<SteamVR_TrackedObject>();
+            CalculateEyeOffsets();
+
+            //if (_head != null) GameObject.DestroyImmediate(_head.gameObject);
+            //_head = new GameObject("Head").transform;
+            //_head.SetParent(transform);
+            //_head.gameObject.AddComponent<SteamVR_TrackedObject>();
 
             SteamVR_Actions._default.Activate();
             yield return null;
@@ -62,10 +71,12 @@ namespace VRBasePlugin.Systems.VRCamera
         private bool IsTurning; private float SnapTurnTimer;
         public void Update()
         {
-            if (_head != null)
+            //if (_head != null)
             {
-                headPos = _head.position;
-                headRot = _head.rotation;
+                //headPos = _head.position;
+                //headRot = _head.rotation;
+                headPos = InputTracking.GetLocalPosition(XRNode.Head);
+                headRot = InputTracking.GetLocalRotation(XRNode.Head);
             }
             if (_left != null)
             {

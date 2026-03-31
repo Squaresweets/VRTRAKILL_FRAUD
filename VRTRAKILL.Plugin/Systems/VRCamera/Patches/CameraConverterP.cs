@@ -16,40 +16,53 @@ namespace Plugin.Systems.VRCamera.Patches
     {
         // ty huskvr you pretty
         public static Camera DesktopWorldCam, DesktopUICam;
+        public static Camera leftEye, rightEye;
 
         [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))] static void ConvertCameras(CameraController __instance)
         {
             while (__instance.cam == null && __instance.hudCamera == null) {}
 
             __instance.cam.nearClipPlane = .01f;
-            __instance.cam.stereoTargetEye = StereoTargetEyeMask.Both;
+            __instance.cam.stereoTargetEye = StereoTargetEyeMask.None;
 
             //// some binary magic (that i don't understand) to enable the layer with the hands
             __instance.cam.cullingMask |= 1 << (int)Layers.AlwaysOnTop;
             __instance.hudCamera.enabled = false;
 
-            XRSettings.gameViewRenderMode = GameViewRenderMode.RightEye;
-            __instance.cam.targetTexture = XRGeneralSettings.Instance.Manager.activeLoader.GetLoadedSubsystem<XRDisplaySubsystem>().GetRenderTextureForRenderPass(0);
-
             // for some particular reason destroying it is a bad idea.
             GameObject.Find("Virtual Camera").SetActive(false);
 
-            #region Desktop View
-            DesktopWorldCam = new GameObject("Desktop World Camera").AddComponent<Camera>();
-            DesktopWorldCam.transform.parent = Vars.MainCamera.transform;
-            DesktopWorldCam.transform.localPosition = Vector3.zero;
-            DesktopWorldCam.gameObject.AddComponent<DesktopCamera>();
+            VRControllerLocations.Instance.CalculateEyeOffsets();
+            leftEye = new GameObject("Left", typeof(Camera)).GetComponent<Camera>();
+            VRTRAKILL.Utilities.Unity.CopyCameraValues(leftEye, __instance.cam);
+            leftEye.transform.SetParent(__instance.transform);
+            leftEye.transform.localPosition = VRControllerLocations.Instance.leftEyeOffset;
+            leftEye.stereoTargetEye = StereoTargetEyeMask.Left;
 
-            DesktopUICam = new GameObject("Desktop UI Camera").AddComponent<Camera>();
-            DesktopUICam.transform.parent = Vars.MainCamera.transform;
-            DesktopUICam.transform.localPosition = Vector3.zero;
-            DesktopUICam.gameObject.AddComponent<DesktopUICamera>();
-            if (!Vars.Config.DesktopView.Enabled)
-            {
-                DesktopWorldCam.gameObject.SetActive(false);
-                DesktopUICam.gameObject.SetActive(false);
-            }
-            #endregion
+            rightEye = new GameObject("Right", typeof(Camera)).GetComponent<Camera>();
+            VRTRAKILL.Utilities.Unity.CopyCameraValues(rightEye, __instance.cam);
+            rightEye.transform.SetParent(__instance.transform);
+            rightEye.transform.localPosition = VRControllerLocations.Instance.rightEyeOffset;
+            rightEye.stereoTargetEye = StereoTargetEyeMask.Right;
+
+            __instance.cam.enabled = false;
+
+            //#region Desktop View
+            //DesktopWorldCam = new GameObject("Desktop World Camera").AddComponent<Camera>();
+            //DesktopWorldCam.transform.parent = Vars.MainCamera.transform;
+            //DesktopWorldCam.transform.localPosition = Vector3.zero;
+            //DesktopWorldCam.gameObject.AddComponent<DesktopCamera>();
+
+            //DesktopUICam = new GameObject("Desktop UI Camera").AddComponent<Camera>();
+            //DesktopUICam.transform.parent = Vars.MainCamera.transform;
+            //DesktopUICam.transform.localPosition = Vector3.zero;
+            //DesktopUICam.gameObject.AddComponent<DesktopUICamera>();
+            //if (!Vars.Config.DesktopView.Enabled)
+            //{
+            //    DesktopWorldCam.gameObject.SetActive(false);
+            //    DesktopUICam.gameObject.SetActive(false);
+            //}
+            //#endregion
         }
         [HarmonyPostfix] [HarmonyPatch(typeof(NewMovement), nameof(NewMovement.GetHurt))] public static void FixWeirdDeathThing(NewMovement __instance)
         {
@@ -81,29 +94,28 @@ namespace Plugin.Systems.VRCamera.Patches
             __instance.tiltRotationZ = VRControllerLocations.Instance.headRot.eulerAngles.z;
             __instance.ApplyRotations();
 
-            //Vector3 headLocalPos = __instance.gravityRotation * Quaternion.AngleAxis(InputVars.TurnOffset, Vector3.up) * VRControllerLocations.Instance._head.position;
-            //__instance.transform.position = __instance.transform.parent.position + headLocalPos;
-
-            //PortalHandle hitPortal;
-            //if (PortalManagerV2.Instance.Scene.FindPortalBetween(__instance.transform.parent.position, __instance.transform.position, out hitPortal, out _, out _, true))
-            //{
-            //    Matrix4x4 travelmatrix = PortalManagerV2.Instance.Scene.GetPortalObject(hitPortal).travelMatrix;
-
-            //    __instance.transform.position = travelmatrix.MultiplyPoint3x4(__instance.transform.position);
-            //    __instance.transform.rotation = travelmatrix.rotation * __instance.transform.rotation;
-            //}
-
             PortalAwareSetTransformFromBody(__instance.transform, VRControllerLocations.Instance.headPos, __instance.transform.rotation);
         }
 
-        public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation, bool takeTurnOffsetIntoAccount = false)
+        public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation)
         {
-            //if (takeTurnOffsetIntoAccount) worldRotation *= Quaternion.Euler(0, -InputVars.TurnOffset, 0);
             CameraController cc = CameraController.Instance;
             Vector3 transformedLocalPos = cc.gravityRotation * Quaternion.AngleAxis(InputVars.TurnOffset, Vector3.up) * localPosition;
             t.position = cc.transform.parent.position + transformedLocalPos;
             t.rotation = worldRotation;
 
+            MoveFromPlayerThroughPortals(t);
+            leftEye.transform.localPosition = VRControllerLocations.Instance.leftEyeOffset;
+            rightEye.transform.localPosition = VRControllerLocations.Instance.rightEyeOffset;
+            leftEye.transform.localRotation = Quaternion.identity;
+            rightEye.transform.localRotation = Quaternion.identity;
+            MoveFromPlayerThroughPortals(leftEye.transform);
+            MoveFromPlayerThroughPortals(rightEye.transform);
+        }
+
+        public static void MoveFromPlayerThroughPortals(Transform t)
+        {
+            CameraController cc = CameraController.Instance;
             PortalHandle hitPortal;
             if (PortalManagerV2.Instance.Scene.FindPortalBetween(cc.transform.parent.position, t.position, out hitPortal, out _, out _, true))
             {
@@ -132,14 +144,6 @@ namespace Plugin.Systems.VRCamera.Patches
             if(Controllers.VRGunsSystem.Instance == null) __result = Vector3.zero;
             __result = Vars.DominantHand.transform.position;
             return false;
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.Render))]
-        static void PortalRenderFix2(PortalRenderV2 __instance)
-        {
-            if(__instance.portalCam)
-            __instance.portalCam.stereoTargetEye = StereoTargetEyeMask.None;
         }
     }
 }
