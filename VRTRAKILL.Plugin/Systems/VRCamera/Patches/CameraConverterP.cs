@@ -35,13 +35,13 @@ namespace Plugin.Systems.VRCamera.Patches
             VRControllerLocations.Instance.CalculateEyeOffsets();
             leftEye = new GameObject("Left", typeof(Camera)).GetComponent<Camera>();
             VRTRAKILL.Utilities.Unity.CopyCameraValues(leftEye, __instance.cam);
-            leftEye.transform.SetParent(__instance.transform);
+            leftEye.transform.SetParent(__instance.transform.parent);
             leftEye.transform.localPosition = VRControllerLocations.Instance.leftEyeOffset;
             leftEye.stereoTargetEye = StereoTargetEyeMask.Left;
 
             rightEye = new GameObject("Right", typeof(Camera)).GetComponent<Camera>();
             VRTRAKILL.Utilities.Unity.CopyCameraValues(rightEye, __instance.cam);
-            rightEye.transform.SetParent(__instance.transform);
+            rightEye.transform.SetParent(__instance.transform.parent);
             rightEye.transform.localPosition = VRControllerLocations.Instance.rightEyeOffset;
             rightEye.stereoTargetEye = StereoTargetEyeMask.Right;
 
@@ -95,6 +95,8 @@ namespace Plugin.Systems.VRCamera.Patches
             __instance.ApplyRotations();
 
             PortalAwareSetTransformFromBody(__instance.transform, VRControllerLocations.Instance.headPos, __instance.transform.rotation);
+            PortalAwareSetTransformFromBody(leftEye.transform, InputTracking.GetLocalPosition(XRNode.LeftEye), __instance.transform.rotation);
+            PortalAwareSetTransformFromBody(rightEye.transform, InputTracking.GetLocalPosition(XRNode.RightEye), __instance.transform.rotation);
         }
 
         public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation)
@@ -105,12 +107,6 @@ namespace Plugin.Systems.VRCamera.Patches
             t.rotation = worldRotation;
 
             MoveFromPlayerThroughPortals(t);
-            leftEye.transform.localPosition = VRControllerLocations.Instance.leftEyeOffset;
-            rightEye.transform.localPosition = VRControllerLocations.Instance.rightEyeOffset;
-            leftEye.transform.localRotation = Quaternion.identity;
-            rightEye.transform.localRotation = Quaternion.identity;
-            MoveFromPlayerThroughPortals(leftEye.transform);
-            MoveFromPlayerThroughPortals(rightEye.transform);
         }
 
         public static void MoveFromPlayerThroughPortals(Transform t)

@@ -16,14 +16,20 @@ namespace Plugin.Systems.VRCamera.Patches
         static PortalRenderV2 rightEye; //Left is using the default one
 
         [HarmonyPostfix] [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnEnable))]
-        static void OnEnable(PortalManagerV2 __instance)
+        static void OnEnableThing(PortalManagerV2 __instance)
         {
             __instance.mainCamera = CameraConverterP.leftEye;
             rightEye = __instance.gameObject.AddComponent<PortalRenderV2>();
+            //Need to set it all up
         }
 
+        [HarmonyPrefix] [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
+        static void LateUpdateTest(PortalManagerV2 __instance)
+        {
+            __instance.mainCamera = CameraConverterP.leftEye;
+        }
         [HarmonyPostfix] [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
-        static void LateUpdate(PortalManagerV2 __instance)
+        static void LateUpdateThing(PortalManagerV2 __instance)
         {
             if(__instance.initialized)
                 rightEye.Setup(__instance.Scene, CameraConverterP.rightEye, __instance.portalCamera);
