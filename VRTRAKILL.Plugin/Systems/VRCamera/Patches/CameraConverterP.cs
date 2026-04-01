@@ -18,6 +18,20 @@ namespace Plugin.Systems.VRCamera.Patches
         public static Camera DesktopWorldCam, DesktopUICam;
         public static Camera leftEye, rightEye;
 
+        public static void SetupEyeCameras()
+        {
+            CameraController cc = CameraController.Instance;
+            VRControllerLocations.Instance.CalculateEyeOffsets();
+            leftEye = new GameObject("Left", typeof(Camera)).GetComponent<Camera>();
+            VRTRAKILL.Utilities.Unity.CopyCameraValues(leftEye, cc.cam);
+            leftEye.transform.SetParent(cc.transform.parent);
+            leftEye.stereoTargetEye = StereoTargetEyeMask.Left;
+
+            rightEye = new GameObject("Right", typeof(Camera)).GetComponent<Camera>();
+            VRTRAKILL.Utilities.Unity.CopyCameraValues(rightEye, cc.cam);
+            rightEye.transform.SetParent(cc.transform.parent);
+            rightEye.stereoTargetEye = StereoTargetEyeMask.Right;
+        }
         [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))] static void ConvertCameras(CameraController __instance)
         {
             while (__instance.cam == null && __instance.hudCamera == null) {}
@@ -31,19 +45,6 @@ namespace Plugin.Systems.VRCamera.Patches
 
             // for some particular reason destroying it is a bad idea.
             GameObject.Find("Virtual Camera").SetActive(false);
-
-            VRControllerLocations.Instance.CalculateEyeOffsets();
-            leftEye = new GameObject("Left", typeof(Camera)).GetComponent<Camera>();
-            VRTRAKILL.Utilities.Unity.CopyCameraValues(leftEye, __instance.cam);
-            leftEye.transform.SetParent(__instance.transform.parent);
-            leftEye.transform.localPosition = VRControllerLocations.Instance.leftEyeOffset;
-            leftEye.stereoTargetEye = StereoTargetEyeMask.Left;
-
-            rightEye = new GameObject("Right", typeof(Camera)).GetComponent<Camera>();
-            VRTRAKILL.Utilities.Unity.CopyCameraValues(rightEye, __instance.cam);
-            rightEye.transform.SetParent(__instance.transform.parent);
-            rightEye.transform.localPosition = VRControllerLocations.Instance.rightEyeOffset;
-            rightEye.stereoTargetEye = StereoTargetEyeMask.Right;
 
             __instance.cam.enabled = false;
 
@@ -94,7 +95,6 @@ namespace Plugin.Systems.VRCamera.Patches
             __instance.tiltRotationZ = VRControllerLocations.Instance.headRot.eulerAngles.z;
             __instance.ApplyRotations();
 
-            PortalAwareSetTransformFromBody(__instance.transform, VRControllerLocations.Instance.headPos, __instance.transform.rotation);
             PortalAwareSetTransformFromBody(leftEye.transform, InputTracking.GetLocalPosition(XRNode.LeftEye), __instance.transform.rotation);
             PortalAwareSetTransformFromBody(rightEye.transform, InputTracking.GetLocalPosition(XRNode.RightEye), __instance.transform.rotation);
         }
