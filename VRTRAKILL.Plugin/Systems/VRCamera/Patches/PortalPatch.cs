@@ -13,14 +13,25 @@ namespace Plugin.Systems.VRCamera.Patches
 {
     [HarmonyPatch] public class PortalPatch
     {
-        //static PortalRenderV2 rightEye; //Left is using the default one
+        static PortalRenderV2 rightEye; //Left is using the default one
 
         [HarmonyPrefix] [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnEnable))]
         static void OnEnableThing(PortalManagerV2 __instance)
         {
             CameraConverterP.SetupEyeCameras();
             __instance.mainCamera = CameraConverterP.leftEye;
-            //rightEye = __instance.gameObject.AddComponent<PortalRenderV2>();
+            //Need to set it all up
+        }
+        [HarmonyPostfix] [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnEnable))]
+        static void OnEnableThingAfter(PortalManagerV2 __instance)
+        {
+            rightEye = __instance.gameObject.AddComponent<PortalRenderV2>();
+            rightEye.portalCompositeMaterial = new Material(__instance.render.portalCompositeMaterial);
+            rightEye.portalMaterial = new Material(__instance.render.portalMaterial);
+            rightEye.portalBitset64DownsampleMat = new Material(__instance.render.portalBitset64DownsampleMat);
+            rightEye.fakeRecursionCopy = new Material(__instance.render.fakeRecursionCopy);
+            rightEye.obliqueCutoff = 0.2f;
+            rightEye.mainCam = CameraConverterP.rightEye;
             //Need to set it all up
         }
 
@@ -34,13 +45,15 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             if (__instance.mainCamera)
                 __instance.mainCamera.projectionMatrix = __instance.mainCamera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
+            if (rightEye.mainCam)
+                rightEye.mainCam.projectionMatrix = rightEye.mainCam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
             __instance.mainCamera = CameraConverterP.leftEye;
         }
         [HarmonyPostfix] [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
         static void LateUpdateThing(PortalManagerV2 __instance)
         {
-            //if(__instance.initialized)
-            //    rightEye.Setup(__instance.Scene, CameraConverterP.rightEye, __instance.portalCamera);
+            if (__instance.initialized)
+                rightEye.Setup(__instance.Scene, CameraConverterP.rightEye, __instance.portalCamera);
         }
 
         [HarmonyPrefix] [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnPreRenderCallback))]
@@ -50,21 +63,20 @@ namespace Plugin.Systems.VRCamera.Patches
             //if (cam.GetCommandBuffers(CameraEvent.BeforeForwardOpaque).Length > 0)
             //    Debug.LogError($"{cam.name} {cam.GetCommandBuffers(CameraEvent.BeforeForwardOpaque)[0].name}");
 
-            //__instance.portalCamera.stereoTargetEye = StereoTargetEyeMask.Both;
+            //__instance.portalCamera.stereoTargetEye = StereoTargetEyeMask.None;
         }
         [HarmonyPostfix] [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnPreRenderCallback))]
         static void OnPreRenderCallback(PortalManagerV2 __instance, Camera cam)
         {
             if (__instance == null || PortalManagerV2.Instance == null) return;
 
-            //__instance.portalCamera.stereoTargetEye = StereoTargetEyeMask.Right;
-            //if (cam == CameraConverterP.rightEye) rightEye.Render(cam);
+            if (cam == CameraConverterP.rightEye) rightEye.Render(cam);
         }
 
         [HarmonyPostfix] [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.SetPortalOcclusion))]
         static void SetPortalOcclusion(bool enabled)
         {
-            //rightEye.SetPortalOcclusion(enabled);
+            rightEye.SetPortalOcclusion(enabled);
         }
         [HarmonyPrefix]
         [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.SetupRenderData))]
@@ -79,6 +91,13 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             if(__instance.portalCam)
                 __instance.portalCam.stereoTargetEye = StereoTargetEyeMask.None;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(PostProcessV2_Handler), nameof(PostProcessV2_Handler.SetupRTs))]
+        static void PPFix(PostProcessV2_Handler __instance)
+        {
+            //__instance.mainTex.vrUsage = VRTextureUsage.TwoEyes;
         }
     }
 }
