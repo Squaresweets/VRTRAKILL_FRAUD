@@ -79,7 +79,7 @@ namespace Plugin
             var xrLoader = ScriptableObject.CreateInstance<OpenVRLoader>();
 
             var settings = OpenVRSettings.GetSettings();
-            settings.StereoRenderingMode = OpenVRSettings.StereoRenderingModes.SinglePassInstanced;
+            settings.StereoRenderingMode = OpenVRSettings.StereoRenderingModes.MultiPass;
             
             generalSettings.Manager = managerSettings;
 
