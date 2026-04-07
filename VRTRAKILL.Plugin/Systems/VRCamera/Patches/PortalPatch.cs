@@ -76,6 +76,7 @@ namespace Plugin.Systems.VRCamera.Patches
             rightEyePortalCam = new GameObject("Right portal cam", typeof(Camera)).GetComponent<Camera>();
             rightEyePortalCam.transform.parent = __instance.transform;
             rightEyePortalCam.CopyFrom(leftEyeRender.portalCam);
+            rightEyePortalCam.enabled = false;
         }
 
         [HarmonyPostfix]
@@ -102,6 +103,7 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
         static void LateUpdateThing(PortalManagerV2 __instance)
         {
+            Shader.GetGlobalTexture(__instance.render.portalDepthID);
             PostProcessV2_Handler.Instance = rightEyePP;
             rightEyeRender.pph = rightEyePP;
             rightEyePP.mainCam = CameraConverterP.rightEye;
@@ -133,7 +135,7 @@ namespace Plugin.Systems.VRCamera.Patches
             PostProcessV2_Handler.Instance = rightEyePP;
             rightEyeRender.pph = rightEyePP;
             rightEyePP.mainCam = CameraConverterP.rightEye;
-            //if (cam == CameraConverterP.rightEye) rightEyeRender.Render(cam);
+            if (cam == CameraConverterP.rightEye) rightEyeRender.Render(cam);
             PostProcessV2_Handler.Instance = leftEyePP;
         }
 
@@ -154,74 +156,15 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.Render))]
         static void PortalRenderFix2(PortalRenderV2 __instance)
         {
+            //if (__instance == leftEyeRender)
+            //{
+                Shader.SetGlobalTexture(__instance.portalOcclusionDataID, __instance.portalOcclusionData);
+                Shader.SetGlobalTexture(__instance.portalCompositeColorID, __instance.portalCompositeColor);
+                Shader.SetGlobalTexture(__instance.portalCompositeOutlineDatahID, __instance.portalCompositeOutlineData);
+                Shader.SetGlobalTexture(__instance.portalCompositeOcclusionDataID, __instance.portalCompositeOcclusionData[0]);
+            //}
             if (__instance.portalCam)
                 __instance.portalCam.stereoTargetEye = StereoTargetEyeMask.None;
-        }
-
-        public static void Save(RenderTexture rt, string path)
-        {
-            // Read RT into Texture2D
-            RenderTexture current = RenderTexture.active;
-            RenderTexture.active = rt;
-
-            Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
-            tex.Apply();
-
-            RenderTexture.active = current;
-
-            SaveTexture(tex, path);
-            UnityEngine.Object.Destroy(tex);
-        }
-
-        static void SaveTexture(Texture2D tex, string path)
-        {
-            int w = tex.width;
-            int h = tex.height;
-            Color32[] pixels = tex.GetPixels32();
-
-            int rowSize = (w * 3 + 3) & ~3; // rows padded to 4 bytes
-            int dataSize = rowSize * h;
-            int fileSize = 54 + dataSize;
-
-            using (var bw = new BinaryWriter(File.Open(path, FileMode.Create)))
-            {
-                // BMP header
-                bw.Write((byte)'B');
-                bw.Write((byte)'M');
-                bw.Write(fileSize);
-                bw.Write(0);
-                bw.Write(54);
-
-                // DIB header (BITMAPINFOHEADER)
-                bw.Write(40);
-                bw.Write(w);
-                bw.Write(h);
-                bw.Write((short)1);
-                bw.Write((short)24); // 24-bit
-                bw.Write(0);
-                bw.Write(dataSize);
-                bw.Write(0);
-                bw.Write(0);
-                bw.Write(0);
-                bw.Write(0);
-
-                // Pixel data (BGR, bottom-up)
-                byte[] padding = new byte[rowSize - w * 3];
-
-                for (int y = 0; y < h; y++)
-                {
-                    int row = y * w;
-                    for (int x = 0; x < w; x++)
-                    {
-                        Color32 c = pixels[row + x];
-                        bw.Write(c.b);
-                        bw.Write(c.g);
-                        bw.Write(c.r);
-                    }
-                    bw.Write(padding);
-                }
-            }
         }
     }
 }
