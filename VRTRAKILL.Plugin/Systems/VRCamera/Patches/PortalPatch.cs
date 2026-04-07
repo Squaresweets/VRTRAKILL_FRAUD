@@ -19,11 +19,15 @@ namespace Plugin.Systems.VRCamera.Patches
         static PortalRenderV2 rightEyeRender; //Left is using the default one
         static PostProcessV2_Handler rightEyePP;
 
+        static Camera rightEyePortalCam;
+
         [HarmonyPrefix]
-        [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnDisable))]
-        static void OnDisableThing(PortalManagerV2 __instance)
+        [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.InitCam))]
+        static bool InitStopDuplicate(PortalManagerV2 __instance)
         {
-            Debug.LogError("DISABLING PORTAL MANAGER AND DISPOSING THE THING");
+            Camera.onPreRender -= __instance.OnPreRenderCallback; //Only add it once
+            Camera.onPreRender += __instance.OnPreRenderCallback;
+            return false;
         }
         [HarmonyPrefix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnEnable))]
@@ -39,6 +43,7 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             leftEyeRender = __instance.render;
 
+            if(rightEyeRender != null) GameObject.Destroy(rightEyeRender);
             rightEyeRender = __instance.gameObject.AddComponent<PortalRenderV2>();
             rightEyeRender.portalCompositeMaterial = new Material(leftEyeRender.portalCompositeMaterial);
             rightEyeRender.portalMaterial = new Material(leftEyeRender.portalMaterial);
@@ -50,6 +55,7 @@ namespace Plugin.Systems.VRCamera.Patches
             //Copy it all over to a new one lmao
             leftEyePP = PostProcessV2_Handler.Instance;
 
+            if(rightEyePP != null) GameObject.Destroy(rightEyePP);
             rightEyePP = __instance.gameObject.AddComponent<PostProcessV2_Handler>();
             rightEyePP.postProcessV2_VSRM = new Material(leftEyePP.postProcessV2_VSRM);
             rightEyePP.screenNormal = new Material(leftEyePP.screenNormal);
@@ -65,6 +71,11 @@ namespace Plugin.Systems.VRCamera.Patches
             rightEyePP.paletteCompute = leftEyePP.paletteCompute;
             rightEyePP.paletteCalc = leftEyePP.paletteCalc;
             //Eye set after start
+
+            if(rightEyePortalCam != null) GameObject.Destroy(rightEyePortalCam);
+            rightEyePortalCam = new GameObject("Right portal cam", typeof(Camera)).GetComponent<Camera>();
+            rightEyePortalCam.transform.parent = __instance.transform;
+            rightEyePortalCam.CopyFrom(leftEyeRender.portalCam);
         }
 
         [HarmonyPostfix]
@@ -81,6 +92,7 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             PostProcessV2_Handler.Instance = leftEyePP;
             leftEyeRender.pph = leftEyePP;
+            leftEyePP.mainCam = CameraConverterP.leftEye;
 
             if (__instance.mainCamera)
                 __instance.mainCamera.projectionMatrix = __instance.mainCamera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
@@ -92,11 +104,12 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             PostProcessV2_Handler.Instance = rightEyePP;
             rightEyeRender.pph = rightEyePP;
+            rightEyePP.mainCam = CameraConverterP.rightEye;
 
             if (rightEyeRender.mainCam)
                 rightEyeRender.mainCam.projectionMatrix = rightEyeRender.mainCam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
             if (__instance.initialized)
-                rightEyeRender.Setup(__instance.Scene, CameraConverterP.rightEye, __instance.portalCamera);
+                rightEyeRender.Setup(__instance.Scene, CameraConverterP.rightEye, rightEyePortalCam);
             PostProcessV2_Handler.Instance = leftEyePP;
         }
 
@@ -108,14 +121,19 @@ namespace Plugin.Systems.VRCamera.Patches
             //Debug.LogError(__instance.Scene.renderHandles);
             //Debug.LogError(__instance.Scene.renderHandles.Length);
             PostProcessV2_Handler.Instance = leftEyePP;
+            leftEyeRender.pph = leftEyePP;
+            leftEyePP.mainCam = CameraConverterP.leftEye;
         }
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnPreRenderCallback))]
         static void OnPreRenderCallback(PortalManagerV2 __instance, Camera cam)
         {
             if (__instance == null || PortalManagerV2.Instance == null) return;
+
             PostProcessV2_Handler.Instance = rightEyePP;
-            if (cam == CameraConverterP.rightEye) rightEyeRender.Render(cam);
+            rightEyeRender.pph = rightEyePP;
+            rightEyePP.mainCam = CameraConverterP.rightEye;
+            //if (cam == CameraConverterP.rightEye) rightEyeRender.Render(cam);
             PostProcessV2_Handler.Instance = leftEyePP;
         }
 
