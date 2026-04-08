@@ -21,6 +21,14 @@ namespace Plugin.Systems.VRCamera.Patches
         public static void SetupEyeCameras()
         {
             CameraController cc = CameraController.Instance;
+
+            cc.cam.nearClipPlane = .01f;
+            cc.cam.stereoTargetEye = StereoTargetEyeMask.None;
+
+            //// some binary magic (that i don't understand) to enable the layer with the hands
+            cc.cam.cullingMask |= 1 << (int)Layers.AlwaysOnTop;
+            cc.hudCamera.enabled = false;
+
             VRControllerLocations.Instance.CalculateEyeOffsets();
             leftEye = new GameObject("Left", typeof(Camera)).GetComponent<Camera>();
             VRTRAKILL.Utilities.Unity.CopyCameraValues(leftEye, cc.cam);
@@ -35,13 +43,6 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))] static void ConvertCameras(CameraController __instance)
         {
             while (__instance.cam == null && __instance.hudCamera == null) {}
-
-            __instance.cam.nearClipPlane = .01f;
-            __instance.cam.stereoTargetEye = StereoTargetEyeMask.None;
-
-            //// some binary magic (that i don't understand) to enable the layer with the hands
-            __instance.cam.cullingMask |= 1 << (int)Layers.AlwaysOnTop;
-            __instance.hudCamera.enabled = false;
 
             // for some particular reason destroying it is a bad idea.
             GameObject.Find("Virtual Camera").SetActive(false);
@@ -88,7 +89,7 @@ namespace Plugin.Systems.VRCamera.Patches
         static void HandleRotationsAndPositions(CameraController __instance)
         {
             // do nothing
-            if (!__instance.nm) return;
+            if (!__instance.player) return;
 
             __instance.rotationX = -VRControllerLocations.Instance.headRot.eulerAngles.x;
             __instance.rotationY = VRControllerLocations.Instance.headRot.eulerAngles.y + InputVars.TurnOffset;
@@ -99,12 +100,18 @@ namespace Plugin.Systems.VRCamera.Patches
             PortalAwareSetTransformFromBody(rightEye.transform, InputTracking.GetLocalPosition(XRNode.RightEye), __instance.transform.rotation);
         }
 
-        public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation)
+        public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation, bool hands = false)
         {
             CameraController cc = CameraController.Instance;
-            Vector3 transformedLocalPos = cc.gravityRotation * Quaternion.AngleAxis(InputVars.TurnOffset, Vector3.up) * localPosition;
+            Quaternion parentRot =
+                cc.gravityRotation *
+                Quaternion.AngleAxis(InputVars.TurnOffset, Vector3.up);
+
+            Vector3 transformedLocalPos = parentRot * localPosition;
             t.position = cc.transform.parent.position + transformedLocalPos;
-            t.rotation = worldRotation;
+
+            if (hands) t.rotation = parentRot * worldRotation;
+            else t.rotation = worldRotation;
 
             MoveFromPlayerThroughPortals(t);
         }

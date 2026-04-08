@@ -2,6 +2,7 @@
 using Plugin.Systems.VRCamera.Patches;
 using System;
 using System.IO;
+using System.Runtime.CompilerServices;
 using ULTRAKILL.Portal;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -75,7 +76,7 @@ namespace Plugin.Systems.VRCamera.Patches
             if(rightEyePortalCam != null) GameObject.Destroy(rightEyePortalCam);
             rightEyePortalCam = new GameObject("Right portal cam", typeof(Camera)).GetComponent<Camera>();
             rightEyePortalCam.transform.parent = __instance.transform;
-            rightEyePortalCam.CopyFrom(leftEyeRender.portalCam);
+            rightEyePortalCam.CopyFrom(__instance.portalCamera);
             rightEyePortalCam.enabled = false;
         }
 
@@ -103,7 +104,6 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
         static void LateUpdateThing(PortalManagerV2 __instance)
         {
-            Shader.GetGlobalTexture(__instance.render.portalDepthID);
             PostProcessV2_Handler.Instance = rightEyePP;
             rightEyeRender.pph = rightEyePP;
             rightEyePP.mainCam = CameraConverterP.rightEye;
@@ -119,9 +119,6 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnPreRenderCallback))]
         static void BeforeOnPreRenderCallback(PortalManagerV2 __instance, Camera cam)
         {
-            //Debug.LogError(cam.name);
-            //Debug.LogError(__instance.Scene.renderHandles);
-            //Debug.LogError(__instance.Scene.renderHandles.Length);
             PostProcessV2_Handler.Instance = leftEyePP;
             leftEyeRender.pph = leftEyePP;
             leftEyePP.mainCam = CameraConverterP.leftEye;
@@ -131,6 +128,7 @@ namespace Plugin.Systems.VRCamera.Patches
         static void OnPreRenderCallback(PortalManagerV2 __instance, Camera cam)
         {
             if (__instance == null || PortalManagerV2.Instance == null) return;
+
 
             PostProcessV2_Handler.Instance = rightEyePP;
             rightEyeRender.pph = rightEyePP;
@@ -156,15 +154,33 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.Render))]
         static void PortalRenderFix2(PortalRenderV2 __instance)
         {
-            //if (__instance == leftEyeRender)
-            //{
+            //__instance.mainCam.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, __instance.bloodOilCB);
+            if (__instance.portalCam) //Essentially just checking if we are configured
+            {
+                Shader.SetGlobalTexture(__instance.portalDepthID, __instance.pph.depthBuffer);
                 Shader.SetGlobalTexture(__instance.portalOcclusionDataID, __instance.portalOcclusionData);
                 Shader.SetGlobalTexture(__instance.portalCompositeColorID, __instance.portalCompositeColor);
                 Shader.SetGlobalTexture(__instance.portalCompositeOutlineDatahID, __instance.portalCompositeOutlineData);
                 Shader.SetGlobalTexture(__instance.portalCompositeOcclusionDataID, __instance.portalCompositeOcclusionData[0]);
-            //}
+            }
+
+            //Shader.SetGlobalTexture("_PaletteTex", __instance.pph.CurrentMapPaletteOverride);
             if (__instance.portalCam)
                 __instance.portalCam.stereoTargetEye = StereoTargetEyeMask.None;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PostProcessV2_Handler), nameof(PostProcessV2_Handler.OnPreRenderCallback))]
+        static void FixRed(PostProcessV2_Handler __instance, Camera cam)
+        {
+            __instance.usedComputeShadersAtStart = false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PlayerAnimations), nameof(PlayerAnimations.Start))]
+        static void RemovePlayerModel(PlayerAnimations __instance)
+        {
+            __instance.GetComponentInChildren<SkinnedMeshRenderer>().enabled = false;
         }
     }
 }

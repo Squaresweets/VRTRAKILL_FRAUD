@@ -81,9 +81,9 @@ namespace Plugin.Systems.Controllers
         public void Update()
         {
             if (source == SteamVR_Input_Sources.LeftHand)
-                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.leftPos, VRControllerLocations.Instance.leftRot);
+                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.leftPos, VRControllerLocations.Instance.leftRot, true);
             else
-                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.rightPos, VRControllerLocations.Instance.rightRot);
+                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.rightPos, VRControllerLocations.Instance.rightRot, true);
 
             // controller-based ui interaction
             if (Vars.Config.UIInteraction.ControllerBased) CPRaycast();
