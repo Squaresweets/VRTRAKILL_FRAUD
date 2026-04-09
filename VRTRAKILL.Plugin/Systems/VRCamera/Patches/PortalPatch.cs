@@ -8,6 +8,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 using UnityEngine.XR;
+using Valve.VR.InteractionSystem;
 
 namespace Plugin.Systems.VRCamera.Patches
 {
@@ -97,7 +98,8 @@ namespace Plugin.Systems.VRCamera.Patches
             leftEyePP.mainCam = CameraConverterP.leftEye;
 
             if (__instance.mainCamera)
-                __instance.mainCamera.projectionMatrix = __instance.mainCamera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
+                //__instance.mainCamera.projectionMatrix = __instance.mainCamera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
+                __instance.mainCamera.projectionMatrix = __instance.mainCamera.projectionMatrix;
             __instance.mainCamera = CameraConverterP.leftEye;
         }
         [HarmonyPostfix]
@@ -180,7 +182,7 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PlayerAnimations), nameof(PlayerAnimations.Start))]
         static void RemovePlayerModel(PlayerAnimations __instance)
         {
-            __instance.GetComponentInChildren<SkinnedMeshRenderer>().enabled = false;
+            __instance.GetComponentsInChildren<SkinnedMeshRenderer>().ForEach(x => UnityEngine.Object.Destroy(x));
         }
     }
 }

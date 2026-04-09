@@ -22,7 +22,7 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             CameraController cc = CameraController.Instance;
 
-            cc.cam.nearClipPlane = .01f;
+            cc.cam.nearClipPlane = 0.01f;
             cc.cam.stereoTargetEye = StereoTargetEyeMask.None;
 
             //// some binary magic (that i don't understand) to enable the layer with the hands
@@ -96,11 +96,11 @@ namespace Plugin.Systems.VRCamera.Patches
             __instance.tiltRotationZ = VRControllerLocations.Instance.headRot.eulerAngles.z;
             __instance.ApplyRotations();
 
-            PortalAwareSetTransformFromBody(leftEye.transform, InputTracking.GetLocalPosition(XRNode.LeftEye), __instance.transform.rotation);
-            PortalAwareSetTransformFromBody(rightEye.transform, InputTracking.GetLocalPosition(XRNode.RightEye), __instance.transform.rotation);
+            PortalAwareSetTransformFromBody(leftEye.transform, InputTracking.GetLocalPosition(XRNode.LeftEye), InputTracking.GetLocalRotation(XRNode.LeftEye));
+            PortalAwareSetTransformFromBody(rightEye.transform, InputTracking.GetLocalPosition(XRNode.RightEye), InputTracking.GetLocalRotation(XRNode.RightEye));
         }
 
-        public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation, bool hands = false)
+        public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation)
         {
             CameraController cc = CameraController.Instance;
             Quaternion parentRot =
@@ -110,8 +110,7 @@ namespace Plugin.Systems.VRCamera.Patches
             Vector3 transformedLocalPos = parentRot * localPosition;
             t.position = cc.transform.parent.position + transformedLocalPos;
 
-            if (hands) t.rotation = parentRot * worldRotation;
-            else t.rotation = worldRotation;
+            t.rotation = parentRot * worldRotation;
 
             MoveFromPlayerThroughPortals(t);
         }
@@ -119,13 +118,53 @@ namespace Plugin.Systems.VRCamera.Patches
         public static void MoveFromPlayerThroughPortals(Transform t)
         {
             CameraController cc = CameraController.Instance;
-            PortalHandle hitPortal;
-            if (PortalManagerV2.Instance.Scene.FindPortalBetween(cc.transform.parent.position, t.position, out hitPortal, out _, out _, true))
-            {
-                Matrix4x4 travelmatrix = PortalManagerV2.Instance.Scene.GetPortalObject(hitPortal).travelMatrix;
+            PortalManagerV2 pm = PortalManagerV2.Instance;
+            PortalScene Scene = pm.Scene;
 
-                t.position = travelmatrix.MultiplyPoint3x4(t.position);
-                t.rotation = travelmatrix.rotation * t.rotation;
+            PortalHandle portalHandle;
+            Vector3 intersection;
+            PortalTravellerFlags portalTravellerFlags = PortalTravellerFlags.Player;
+
+            //Code from PortalManager2
+            if (Scene.FindCrossedPortal(cc.transform.parent.position, t.transform.position, out portalHandle, out intersection))
+            {
+                Portal portalObject = Scene.GetPortalObject(portalHandle);
+                PortalTravellerFlags travelFlags = portalObject.GetTravelFlags(portalHandle.side);
+                bool canTravel = travelFlags.HasFlag(portalTravellerFlags);
+                PortalHandleSequence portalSequence = new PortalHandleSequence(new PortalHandle[]
+                {
+                    portalHandle
+                });
+                if (canTravel)
+                {
+                    Matrix4x4 travelMatrix = Scene.GetTravelMatrix(portalHandle);
+                    Vector3 vector2 = travelMatrix.MultiplyPoint3x4(intersection);
+                    Vector3 direction = travelMatrix.MultiplyPoint3x4(t.transform.position) - vector2;
+                    PortalTraversalV2[] intersections;
+                    PortalPhysicsV2.ProjectThroughPortals(vector2, direction, pm.empty_lm, out _, out _, out intersections);
+                    for (int i = 0; i < intersections.Length; i++)
+                    {
+                        PortalHandle portalHandle2 = intersections[i].portalHandle;
+                        if (!Scene.GetPortalObject(portalHandle2).GetTravelFlags(intersections[i].portalHandle.side).HasFlag(portalTravellerFlags))
+                        {
+                            canTravel = false;
+                            break;
+                        }
+                    }
+                    if (canTravel)
+                    {
+                        if (intersections.Length != 0)
+                        {
+                            portalSequence = PortalHandleSequence.Prepend(portalHandle, intersections);
+                            travelMatrix = Scene.GetTravelMatrix(portalSequence);
+                        }
+                        PortalTravelDetails details = PortalTravelDetails.WithInteresction(portalSequence, intersections, travelMatrix, intersection);
+
+                        //Actually do the movement
+                        t.transform.position = details.enterToExit.MultiplyPoint3x4(t.transform.position);
+                        t.transform.rotation = details.enterToExit.rotation * t.transform.rotation;
+                    }
+                }
             }
         }
 

@@ -1,4 +1,5 @@
 ﻿using Plugin.Systems.VRCamera.Patches;
+using ULTRAKILL.Portal;
 using UnityEngine;
 using Valve.VR;
 using VRBasePlugin.Systems.VRCamera;
@@ -77,13 +78,15 @@ namespace Plugin.Systems.Controllers
 
             if (Vars.Config.UIInteraction.ControllerLines.Enabled && gameObject.HasComponent<VRArmsSystem>())
                 SetupControllerLines();
+
+            if (!GetComponent<PortalAwareRenderer>()) gameObject.AddComponent<PortalAwareRenderer>();
         }
         public void Update()
         {
             if (source == SteamVR_Input_Sources.LeftHand)
-                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.leftPos, VRControllerLocations.Instance.leftRot, true);
+                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.leftPos, VRControllerLocations.Instance.leftRot);
             else
-                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.rightPos, VRControllerLocations.Instance.rightRot, true);
+                CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.rightPos, VRControllerLocations.Instance.rightRot);
 
             // controller-based ui interaction
             if (Vars.Config.UIInteraction.ControllerBased) CPRaycast();
