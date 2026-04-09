@@ -161,6 +161,7 @@ namespace Plugin.Systems.VRCamera.Patches
                         PortalTravelDetails details = PortalTravelDetails.WithInteresction(portalSequence, intersections, travelMatrix, intersection);
 
                         //Actually do the movement
+                        Debug.LogError($"{Time.time} moving {t.gameObject.name}");
                         t.transform.position = details.enterToExit.MultiplyPoint3x4(t.transform.position);
                         t.transform.rotation = details.enterToExit.rotation * t.transform.rotation;
                     }

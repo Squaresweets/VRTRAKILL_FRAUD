@@ -92,7 +92,6 @@ namespace Plugin.Patches.Controllers;
         }
         else if (Source == SteamVR_Input_Sources.RightHand)
         {
-
             if (Vars.Config.Controllers.LeftHanded)
                 T = Object.Instantiate(Assets.Controller_ND).transform;
             else

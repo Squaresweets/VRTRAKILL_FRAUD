@@ -79,7 +79,7 @@ namespace Plugin.Systems.Controllers
             if (Vars.Config.UIInteraction.ControllerLines.Enabled && gameObject.HasComponent<VRArmsSystem>())
                 SetupControllerLines();
 
-            if (!GetComponent<PortalAwareRenderer>()) gameObject.AddComponent<PortalAwareRenderer>();
+            if (!RenderModel.GetComponent<PortalAwareRenderer>()) RenderModel.AddComponent<PortalAwareRenderer>().objectType = PortalAwareRenderer.ObjectType.Player;
         }
         public void Update()
         {

@@ -97,10 +97,13 @@ namespace Plugin.Systems.VRCamera.Patches
             leftEyeRender.pph = leftEyePP;
             leftEyePP.mainCam = CameraConverterP.leftEye;
 
-            if (__instance.mainCamera)
-                //__instance.mainCamera.projectionMatrix = __instance.mainCamera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
-                __instance.mainCamera.projectionMatrix = __instance.mainCamera.projectionMatrix;
             __instance.mainCamera = CameraConverterP.leftEye;
+            if (__instance.mainCamera)
+            {
+                //Two very important lines!!!
+                __instance.mainCamera.SetStereoViewMatrix(Camera.StereoscopicEye.Left, __instance.mainCamera.worldToCameraMatrix);
+                __instance.mainCamera.projectionMatrix = __instance.mainCamera.GetStereoProjectionMatrix(Camera.StereoscopicEye.Left);
+            }
         }
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
@@ -111,7 +114,10 @@ namespace Plugin.Systems.VRCamera.Patches
             rightEyePP.mainCam = CameraConverterP.rightEye;
 
             if (rightEyeRender.mainCam)
+            {
+                rightEyeRender.mainCam.SetStereoViewMatrix(Camera.StereoscopicEye.Right, rightEyeRender.mainCam.worldToCameraMatrix);
                 rightEyeRender.mainCam.projectionMatrix = rightEyeRender.mainCam.GetStereoProjectionMatrix(Camera.StereoscopicEye.Right);
+            }
             if (__instance.initialized)
                 rightEyeRender.Setup(__instance.Scene, CameraConverterP.rightEye, rightEyePortalCam);
             PostProcessV2_Handler.Instance = leftEyePP;
