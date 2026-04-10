@@ -79,7 +79,14 @@ namespace Plugin.Systems.Controllers
             if (Vars.Config.UIInteraction.ControllerLines.Enabled && gameObject.HasComponent<VRArmsSystem>())
                 SetupControllerLines();
 
-            if (!RenderModel.GetComponent<PortalAwareRenderer>()) RenderModel.AddComponent<PortalAwareRenderer>().objectType = PortalAwareRenderer.ObjectType.Player;
+            if (!RenderModel.GetComponent<PortalAwareRenderer>())
+            {
+                PortalAwareRenderer r = RenderModel.AddComponent<PortalAwareRenderer>();
+                r.objectType = PortalAwareRenderer.ObjectType.Player;
+                r.hasParent = true;
+                foreach (Transform t in RenderModel.GetComponentsInChildren<Transform>(true))
+                    t.gameObject.layer = LayerMask.NameToLayer("Environment");
+            }
         }
         public void Update()
         {

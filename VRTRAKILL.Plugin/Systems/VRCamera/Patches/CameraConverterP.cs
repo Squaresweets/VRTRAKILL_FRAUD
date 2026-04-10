@@ -11,6 +11,7 @@ using UnityEngine.XR.Management;
 using Valve.VR;
 using VRBasePlugin.Systems.VRCamera;
 using Plugin.Systems;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace Plugin.Systems.VRCamera.Patches
 {
@@ -42,10 +43,11 @@ namespace Plugin.Systems.VRCamera.Patches
             rightEye.stereoTargetEye = StereoTargetEyeMask.Right;
 
             //Add in the VR head
-            GameObject head = GameObject.Instantiate(Assets.VHead, leftEye.transform);
-            Object.Destroy(head.GetComponent<CapsuleCollider>());
-            foreach (Transform t in head.GetComponentsInChildren<Transform>(true))
-                t.gameObject.layer = LayerMask.NameToLayer("Portal");
+            //GameObject head = GameObject.Instantiate(Assets.VHead, leftEye.transform);
+            //head.transform.localScale *= 2f;
+            //Object.Destroy(head.GetComponent<CapsuleCollider>());
+            //foreach (Transform t in head.GetComponentsInChildren<Transform>(true))
+            //    t.gameObject.layer = LayerMask.NameToLayer("Portal");
         }
         [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))] static void ConvertCameras(CameraController __instance)
         {
@@ -96,7 +98,7 @@ namespace Plugin.Systems.VRCamera.Patches
         static void HandleRotationsAndPositions(CameraController __instance)
         {
             // do nothing
-            if (!__instance.player) return;
+            if (!__instance.player) { __instance.nm = NewMovement.Instance; __instance.player = __instance.nm.gameObject; }
 
             __instance.rotationX = -VRControllerLocations.Instance.headRot.eulerAngles.x;
             __instance.rotationY = VRControllerLocations.Instance.headRot.eulerAngles.y + InputVars.TurnOffset;
@@ -201,6 +203,7 @@ namespace Plugin.Systems.VRCamera.Patches
         static void RemovePlayerModel(PlayerAnimations __instance)
         {
             __instance.GetComponentsInChildren<SkinnedMeshRenderer>(true).ToList().ForEach(x => UnityEngine.Object.Destroy(x));
+            __instance.GetComponentsInChildren<MeshRenderer>(true).ToList().ForEach(x => UnityEngine.Object.Destroy(x));
         }
     }
 }

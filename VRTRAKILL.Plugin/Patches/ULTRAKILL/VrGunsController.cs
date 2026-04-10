@@ -26,7 +26,7 @@ internal class VRGunsController : MonoSingleton<VRGunsController>
         CameraFrustumTargeter.Instance.camera = TargeterCamera;
     }
 
-    public void Update()
+    public void LateUpdate()
     {
         TargeterCamera.transform.position = Vars.DominantHand.transform.position;
         transform.position = Vars.DominantHand.transform.position;
