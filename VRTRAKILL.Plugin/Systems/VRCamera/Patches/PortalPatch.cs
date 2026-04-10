@@ -183,12 +183,5 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             __instance.usedComputeShadersAtStart = false;
         }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(PlayerAnimations), nameof(PlayerAnimations.Start))]
-        static void RemovePlayerModel(PlayerAnimations __instance)
-        {
-            __instance.GetComponentsInChildren<SkinnedMeshRenderer>().ForEach(x => UnityEngine.Object.Destroy(x));
-        }
     }
 }

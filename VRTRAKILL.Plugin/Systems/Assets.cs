@@ -32,7 +32,7 @@ namespace Plugin.Systems
             //Plugin.Log.LogMessage("Loading assets: " + (SteamVR.initializedState.ToString()));
             AssetBundle Assets = LoadBundle("vrtrakillassetbundle");
             VRig = Object.Instantiate(LoadAsset<GameObject>(Assets, "V1/V1.prefab"), DefaultPos, DefaultRot);
-            VHead = Object.Instantiate(LoadAsset<GameObject>(Assets, "V1/V1_Head.prefab"), DefaultPos, DefaultRot);
+            VHead = LoadAsset<GameObject>(Assets, "V1/V1_Head.prefab");
             //CAMERARIG = Object.Instantiate(LoadAsset<GameObject>(Assets, "[CameraRig].prefab"), DefaultPos, DefaultRot);
 
             HandPose_Shotgun = Object.Instantiate(LoadAsset<GameObject>(Assets, "Arms/Feedbacker/Hand_Shotgun.prefab"), DefaultPos, DefaultRot);

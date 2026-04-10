@@ -1,6 +1,6 @@
 ﻿using HarmonyLib;
 using Plugin.Systems.Input;
-using System;
+using System.Linq;
 using System.Collections.Generic;
 using ULTRAKILL.Portal;
 using UnityEngine;
@@ -10,6 +10,8 @@ using UnityEngine.XR;
 using UnityEngine.XR.Management;
 using Valve.VR;
 using VRBasePlugin.Systems.VRCamera;
+using Plugin.Systems;
+
 namespace Plugin.Systems.VRCamera.Patches
 {
     [HarmonyPatch] public class CameraConverterP
@@ -29,7 +31,6 @@ namespace Plugin.Systems.VRCamera.Patches
             cc.cam.cullingMask |= 1 << (int)Layers.AlwaysOnTop;
             cc.hudCamera.enabled = false;
 
-            VRControllerLocations.Instance.CalculateEyeOffsets();
             leftEye = new GameObject("Left", typeof(Camera)).GetComponent<Camera>();
             VRTRAKILL.Utilities.Unity.CopyCameraValues(leftEye, cc.cam);
             leftEye.transform.SetParent(cc.transform.parent);
@@ -39,6 +40,12 @@ namespace Plugin.Systems.VRCamera.Patches
             VRTRAKILL.Utilities.Unity.CopyCameraValues(rightEye, cc.cam);
             rightEye.transform.SetParent(cc.transform.parent);
             rightEye.stereoTargetEye = StereoTargetEyeMask.Right;
+
+            //Add in the VR head
+            GameObject head = GameObject.Instantiate(Assets.VHead, leftEye.transform);
+            Object.Destroy(head.GetComponent<CapsuleCollider>());
+            foreach (Transform t in head.GetComponentsInChildren<Transform>(true))
+                t.gameObject.layer = LayerMask.NameToLayer("Portal");
         }
         [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))] static void ConvertCameras(CameraController __instance)
         {
@@ -96,11 +103,11 @@ namespace Plugin.Systems.VRCamera.Patches
             __instance.tiltRotationZ = VRControllerLocations.Instance.headRot.eulerAngles.z;
             __instance.ApplyRotations();
 
-            PortalAwareSetTransformFromBody(leftEye.transform, InputTracking.GetLocalPosition(XRNode.LeftEye), InputTracking.GetLocalRotation(XRNode.LeftEye));
-            PortalAwareSetTransformFromBody(rightEye.transform, InputTracking.GetLocalPosition(XRNode.RightEye), InputTracking.GetLocalRotation(XRNode.RightEye));
+            PortalAwareSetTransformFromBody(leftEye.transform, InputTracking.GetLocalPosition(XRNode.LeftEye), __instance.transform.rotation);
+            PortalAwareSetTransformFromBody(rightEye.transform, InputTracking.GetLocalPosition(XRNode.RightEye), __instance.transform.rotation);
         }
 
-        public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation)
+        public static void PortalAwareSetTransformFromBody(Transform t, Vector3 localPosition, Quaternion worldRotation, bool hands = false)
         {
             CameraController cc = CameraController.Instance;
             Quaternion parentRot =
@@ -110,7 +117,8 @@ namespace Plugin.Systems.VRCamera.Patches
             Vector3 transformedLocalPos = parentRot * localPosition;
             t.position = cc.transform.parent.position + transformedLocalPos;
 
-            t.rotation = parentRot * worldRotation;
+            if (hands) t.rotation = parentRot * worldRotation;
+            else t.rotation = worldRotation;
 
             MoveFromPlayerThroughPortals(t);
         }
@@ -161,7 +169,6 @@ namespace Plugin.Systems.VRCamera.Patches
                         PortalTravelDetails details = PortalTravelDetails.WithInteresction(portalSequence, intersections, travelMatrix, intersection);
 
                         //Actually do the movement
-                        Debug.LogError($"{Time.time} moving {t.gameObject.name}");
                         t.transform.position = details.enterToExit.MultiplyPoint3x4(t.transform.position);
                         t.transform.rotation = details.enterToExit.rotation * t.transform.rotation;
                     }
@@ -187,6 +194,13 @@ namespace Plugin.Systems.VRCamera.Patches
             if(Controllers.VRGunsSystem.Instance == null) __result = Vector3.zero;
             __result = Vars.DominantHand.transform.position;
             return false;
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(PlayerAnimations), nameof(PlayerAnimations.Start))]
+        static void RemovePlayerModel(PlayerAnimations __instance)
+        {
+            __instance.GetComponentsInChildren<SkinnedMeshRenderer>(true).ToList().ForEach(x => UnityEngine.Object.Destroy(x));
         }
     }
 }

@@ -25,19 +25,9 @@ namespace VRBasePlugin.Systems.VRCamera
         public Quaternion rightRot = Quaternion.identity;
         private Transform _right;
 
-        public Vector3 leftEyeOffset;
-        public Vector3 rightEyeOffset;
-
-        public void CalculateEyeOffsets()
-        {
-            leftEyeOffset = Quaternion.Inverse(InputTracking.GetLocalRotation(XRNode.Head)) * (InputTracking.GetLocalPosition(XRNode.LeftEye) - InputTracking.GetLocalPosition(XRNode.Head));
-            rightEyeOffset = Quaternion.Inverse(InputTracking.GetLocalRotation(XRNode.Head)) * (InputTracking.GetLocalPosition(XRNode.RightEye) - InputTracking.GetLocalPosition(XRNode.Head));
-        }
         IEnumerator Start()
         {
             transform.position = Vector3.zero; //IK its unneccessary but just make sure
-
-            CalculateEyeOffsets();
 
             //if (_head != null) GameObject.DestroyImmediate(_head.gameObject);
             //_head = new GameObject("Head").transform;

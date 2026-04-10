@@ -73,13 +73,13 @@ namespace Plugin.Systems
 
         #region Controllers
         public static GameObject NonDominantHand
-            => Controllers.VRArmsSystem.instance.GunOffset;
+            => Controllers.VRArmsSystem.Instance.GunOffset;
         public static Controllers.VRArmsSystem NDHC
-            => Controllers.VRArmsSystem.instance;
+            => Controllers.VRArmsSystem.Instance;
         public static GameObject DominantHand
-            => Controllers.VRGunsSystem.instance.GunOffset;
+            => Controllers.VRGunsSystem.Instance.GunOffset;
         public static Controllers.VRGunsSystem DHC
-            => Controllers.VRGunsSystem.instance;
+            => Controllers.VRGunsSystem.Instance;
         #endregion
     }
 }

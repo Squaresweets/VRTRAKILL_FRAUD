@@ -57,21 +57,7 @@ namespace Plugin.Patches.Controllers;
 
     private static GameObject CreateController(string Name, SteamVR_Input_Sources Source)
     {
-        GameObject GO = new GameObject(Name) { layer = (int)Layers.IgnoreRaycast };
-        //SteamVR_Behaviour_Pose Controller = GO.AddComponent<SteamVR_Behaviour_Pose>();
-        ////Controller.onTransformUpdatedEvent += VRControllersSystem.OnTransformUpdatedH;
-        //if (Source == SteamVR_Input_Sources.LeftHand)
-        //{
-            //Controller.poseAction = SteamVR_Actions._default.LeftPose;
-        //    Controller.inputSource = SteamVR_Input_Sources.LeftHand;
-        //}
-        //else if (Source == SteamVR_Input_Sources.RightHand)
-        //{
-        //    Controller.poseAction = SteamVR_Actions._default.RightPose;
-        //    Controller.inputSource = SteamVR_Input_Sources.RightHand;
-        //}
-        //else throw new System.NotImplementedException();
-        return GO;
+        return new GameObject(Name) { layer = (int)Layers.IgnoreRaycast };
     }
     private static GameObject CreateControllerModel(SteamVR_Input_Sources Source, out GameObject SandboxRM, string Name = "Model")
     {
