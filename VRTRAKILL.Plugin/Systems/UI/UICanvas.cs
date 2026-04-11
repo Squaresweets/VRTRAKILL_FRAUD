@@ -18,9 +18,11 @@ namespace Plugin.Systems.UI
         }
         private void ResetPos()
         {
-            LastCamFwd = new Vector3(LastCamFwd.x, 0f, LastCamFwd.z);
-            transform.LookAt(Vars.MainCamera.transform);
-            transform.forward = new Vector3(-transform.forward.x, 0f, -transform.forward.z);
+            Vector3 customUp = CameraController.Instance.gravityRotation * Vector3.up;
+            
+            LastCamFwd = Vector3.ProjectOnPlane(LastCamFwd, customUp);
+            if (LastCamFwd != Vector3.zero)
+                transform.rotation = Quaternion.LookRotation(LastCamFwd, customUp);
         }
 
         public void Start()

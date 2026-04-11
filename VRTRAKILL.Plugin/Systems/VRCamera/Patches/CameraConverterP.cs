@@ -53,12 +53,12 @@ namespace Plugin.Systems.VRCamera.Patches
 
             //#region Desktop View
             //DesktopWorldCam = new GameObject("Desktop World Camera").AddComponent<Camera>();
-            //DesktopWorldCam.transform.parent = Vars.MainCamera.transform;
+            //DesktopWorldCam.transform.parent = leftEye.transform;
             //DesktopWorldCam.transform.localPosition = Vector3.zero;
             //DesktopWorldCam.gameObject.AddComponent<DesktopCamera>();
 
             //DesktopUICam = new GameObject("Desktop UI Camera").AddComponent<Camera>();
-            //DesktopUICam.transform.parent = Vars.MainCamera.transform;
+            //DesktopUICam.transform.parent = leftEye.transform;
             //DesktopUICam.transform.localPosition = Vector3.zero;
             //DesktopUICam.gameObject.AddComponent<DesktopUICamera>();
             //if (!Vars.Config.DesktopView.Enabled)
@@ -199,6 +199,7 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             //Add in the VR head
             GameObject head = GameObject.Instantiate(Assets.VHead, leftEye.transform);
+            head.transform.localPosition = new Vector3(0, 0, -0.07f);
             head.transform.localScale *= 2f;
             Object.Destroy(head.GetComponent<CapsuleCollider>());
             foreach (Transform t in head.GetComponentsInChildren<Transform>(true))

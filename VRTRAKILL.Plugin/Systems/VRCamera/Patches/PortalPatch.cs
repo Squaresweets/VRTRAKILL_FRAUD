@@ -178,6 +178,7 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PostProcessV2_Handler), nameof(PostProcessV2_Handler.OnPreRenderCallback))]
         static void FixRed(PostProcessV2_Handler __instance, Camera cam)
         {
+            if (cam == __instance.mainCam) __instance.RenderSkyboxes();
             __instance.usedComputeShadersAtStart = false;
         }
         //Other hand done in VRArmTransformer (bad ik)
@@ -185,6 +186,12 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             if (!__instance.GetComponent<PortalAwareRenderer>())
                 __instance.gameObject.AddComponent<PortalAwareRenderer>().objectType = PortalAwareRenderer.ObjectType.Player;
+        }
+
+        public static void AddLimboSkyboxToAllPPHs(LimboSkybox l)
+        {
+            leftEyePP.AddLimboSkybox(l);
+            rightEyePP.AddLimboSkybox(l);
         }
     }
 }
