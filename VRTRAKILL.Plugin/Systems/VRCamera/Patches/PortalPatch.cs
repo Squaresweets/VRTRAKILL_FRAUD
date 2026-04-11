@@ -33,7 +33,7 @@ namespace Plugin.Systems.VRCamera.Patches
         }
         [HarmonyPrefix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnEnable))]
-        static void OnEnableThing(PortalManagerV2 __instance)
+        static void SetCamToLeft(PortalManagerV2 __instance)
         {
             CameraConverterP.SetupEyeCameras();
             __instance.mainCamera = CameraConverterP.leftEye;
@@ -41,7 +41,7 @@ namespace Plugin.Systems.VRCamera.Patches
         }
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnEnable))]
-        static void OnEnableThingAfter(PortalManagerV2 __instance)
+        static void SetupDuplicates(PortalManagerV2 __instance)
         {
             leftEyeRender = __instance.render;
 
@@ -91,7 +91,7 @@ namespace Plugin.Systems.VRCamera.Patches
         }
         [HarmonyPrefix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
-        static void LateUpdateTest(PortalManagerV2 __instance)
+        static void LateUpdateLeft(PortalManagerV2 __instance)
         {
             PostProcessV2_Handler.Instance = leftEyePP;
             leftEyeRender.pph = leftEyePP;
@@ -107,7 +107,7 @@ namespace Plugin.Systems.VRCamera.Patches
         }
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
-        static void LateUpdateThing(PortalManagerV2 __instance)
+        static void LateUpdateRight(PortalManagerV2 __instance)
         {
             PostProcessV2_Handler.Instance = rightEyePP;
             rightEyeRender.pph = rightEyePP;
@@ -125,7 +125,7 @@ namespace Plugin.Systems.VRCamera.Patches
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnPreRenderCallback))]
-        static void BeforeOnPreRenderCallback(PortalManagerV2 __instance, Camera cam)
+        static void OnPreRenderCalbackLeft(PortalManagerV2 __instance, Camera cam)
         {
             PostProcessV2_Handler.Instance = leftEyePP;
             leftEyeRender.pph = leftEyePP;
@@ -133,10 +133,9 @@ namespace Plugin.Systems.VRCamera.Patches
         }
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnPreRenderCallback))]
-        static void OnPreRenderCallback(PortalManagerV2 __instance, Camera cam)
+        static void OnPreRenderCallbackRight(PortalManagerV2 __instance, Camera cam)
         {
             if (__instance == null || PortalManagerV2.Instance == null) return;
-
 
             PostProcessV2_Handler.Instance = rightEyePP;
             rightEyeRender.pph = rightEyePP;
@@ -155,16 +154,15 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.SetupRenderData))]
         static void PortalRenderFix(PortalRenderV2 __instance)
         {
-            if (__instance.portalCam)
-                __instance.portalCam.stereoTargetEye = StereoTargetEyeMask.None;
+            if (__instance.portalCam) __instance.portalCam.stereoTargetEye = StereoTargetEyeMask.None;
         }
         [HarmonyPrefix]
         [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.Render))]
         static void PortalRenderFix2(PortalRenderV2 __instance)
         {
-            //__instance.mainCam.RemoveCommandBuffer(CameraEvent.BeforeForwardAlpha, __instance.bloodOilCB);
             if (__instance.portalCam) //Essentially just checking if we are configured
             {
+                //All the globals that get overwritten
                 Shader.SetGlobalTexture(__instance.portalDepthID, __instance.pph.depthBuffer);
                 Shader.SetGlobalTexture(__instance.portalOcclusionDataID, __instance.portalOcclusionData);
                 Shader.SetGlobalTexture(__instance.portalCompositeColorID, __instance.portalCompositeColor);
@@ -172,7 +170,6 @@ namespace Plugin.Systems.VRCamera.Patches
                 Shader.SetGlobalTexture(__instance.portalCompositeOcclusionDataID, __instance.portalCompositeOcclusionData[0]);
             }
 
-            //Shader.SetGlobalTexture("_PaletteTex", __instance.pph.CurrentMapPaletteOverride);
             if (__instance.portalCam)
                 __instance.portalCam.stereoTargetEye = StereoTargetEyeMask.None;
         }
@@ -182,6 +179,12 @@ namespace Plugin.Systems.VRCamera.Patches
         static void FixRed(PostProcessV2_Handler __instance, Camera cam)
         {
             __instance.usedComputeShadersAtStart = false;
+        }
+        //Other hand done in VRArmTransformer (bad ik)
+        [HarmonyPrefix] [HarmonyPatch(typeof(WeaponPos), nameof(WeaponPos.Start))] static void AddWeaponRenderers(WeaponPos __instance)
+        {
+            if (!__instance.GetComponent<PortalAwareRenderer>())
+                __instance.gameObject.AddComponent<PortalAwareRenderer>().objectType = PortalAwareRenderer.ObjectType.Player;
         }
     }
 }

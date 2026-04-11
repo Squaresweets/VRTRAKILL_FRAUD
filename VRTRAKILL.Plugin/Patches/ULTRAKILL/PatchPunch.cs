@@ -29,6 +29,8 @@ namespace Plugin.Patches.ULTRAKILL;
         // inshallah pls stop
         foreach (SkinnedMeshRenderer SMR in __instance.GetComponentsInChildren<SkinnedMeshRenderer>())
             SMR.updateWhenOffscreen = true;
+
+        __instance.tr.enabled = false;
     }
 
     //[HarmonyPrefix]

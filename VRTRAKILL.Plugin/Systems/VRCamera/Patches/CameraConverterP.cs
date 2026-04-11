@@ -41,13 +41,6 @@ namespace Plugin.Systems.VRCamera.Patches
             VRTRAKILL.Utilities.Unity.CopyCameraValues(rightEye, cc.cam);
             rightEye.transform.SetParent(cc.transform.parent);
             rightEye.stereoTargetEye = StereoTargetEyeMask.Right;
-
-            //Add in the VR head
-            //GameObject head = GameObject.Instantiate(Assets.VHead, leftEye.transform);
-            //head.transform.localScale *= 2f;
-            //Object.Destroy(head.GetComponent<CapsuleCollider>());
-            //foreach (Transform t in head.GetComponentsInChildren<Transform>(true))
-            //    t.gameObject.layer = LayerMask.NameToLayer("Portal");
         }
         [HarmonyPrefix] [HarmonyPatch(typeof(CameraController), nameof(CameraController.Start))] static void ConvertCameras(CameraController __instance)
         {
@@ -90,6 +83,8 @@ namespace Plugin.Systems.VRCamera.Patches
             // this mod is officially my opus magnum spaghetti code and dumpster fire
             //Container.transform.localScale = new Vector3(2, 2, 2);
             __instance.gameObject.AddComponent<VRPlayer.VRKeybindsController>();
+
+            InputVars.TurnOffset = 0;
         }
 
 
@@ -202,8 +197,18 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PlayerAnimations), nameof(PlayerAnimations.Start))]
         static void RemovePlayerModel(PlayerAnimations __instance)
         {
+            //Add in the VR head
+            GameObject head = GameObject.Instantiate(Assets.VHead, leftEye.transform);
+            head.transform.localScale *= 2f;
+            Object.Destroy(head.GetComponent<CapsuleCollider>());
+            foreach (Transform t in head.GetComponentsInChildren<Transform>(true))
+                t.gameObject.layer = LayerMask.NameToLayer("Portal");
+            //Done so we get the correct unlit look
+            head.GetComponentInChildren<SkinnedMeshRenderer>().material = __instance.transform.GetChild(1).GetComponent<SkinnedMeshRenderer>().material;
+
             __instance.GetComponentsInChildren<SkinnedMeshRenderer>(true).ToList().ForEach(x => UnityEngine.Object.Destroy(x));
             __instance.GetComponentsInChildren<MeshRenderer>(true).ToList().ForEach(x => UnityEngine.Object.Destroy(x));
+            __instance.GetComponentsInChildren<GunColorGetter>(true).ToList().ForEach(x => UnityEngine.Object.Destroy(x));
         }
     }
 }

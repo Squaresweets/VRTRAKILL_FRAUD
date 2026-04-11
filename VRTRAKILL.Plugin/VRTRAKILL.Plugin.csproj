@@ -289,6 +289,7 @@
     <Compile Include="Patches\ULTRAKILL\A.cs" />
     <Compile Include="Patches\ULTRAKILL\CameraControllerTranspiler.cs" />
     <Compile Include="Patches\ULTRAKILL\DuelWieldP.cs" />
+    <Compile Include="Systems\VRCamera\Patches\FrustrumTargetTranspiler.cs" />
     <Compile Include="Patches\ULTRAKILL\GunsP.cs" />
     <Compile Include="Patches\ULTRAKILL\PatchStains.cs" />
     <Compile Include="Patches\ULTRAKILL\PatchRevolver.cs" />
@@ -349,6 +350,7 @@
     <Compile Include="Systems\VRCamera\Patches\A.cs" />
     <Compile Include="Systems\VRCamera\Patches\CameraConverterP.cs" />
     <Compile Include="Systems\VRCamera\Patches\CrashBandicrootCCP.cs" />
+    <Compile Include="Systems\VRCamera\Patches\MirrorFix.cs" />
     <Compile Include="Systems\VRCamera\Patches\PortalPatch.cs" />
     <Compile Include="Systems\VRCamera\VRControllerLocations.cs" />
     <Compile Include="Systems\VRPlayer\VRKeybindsController.cs" />

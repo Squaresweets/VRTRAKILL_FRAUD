@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Plugin.Systems.VRAvatar.Armature;
+using ULTRAKILL.Portal;
 
 namespace Plugin.Systems.Arms;
 
@@ -69,6 +70,10 @@ internal class VRArmTransformer : MonoBehaviour
             }
         if (Vars.Config.Controllers.LeftHanded)
             transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
+
+
+        if (!GetComponent<PortalAwareRenderer>())
+            gameObject.AddComponent<PortalAwareRenderer>().objectType = PortalAwareRenderer.ObjectType.Player;
     }
     
     public void LateUpdate()

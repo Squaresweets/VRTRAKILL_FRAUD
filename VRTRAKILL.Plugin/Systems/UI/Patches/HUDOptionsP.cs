@@ -124,30 +124,5 @@ namespace Plugin.Systems.UI.Patches
             __instance.fakeCam.projectionMatrix = __instance.playerCam.projectionMatrix; //ONLY ADDED LINE
             __instance.fakeCam.Render();
         }
-
-        public static Vector3 GetEyePosition(Camera.StereoscopicEye eye)
-        {
-            Vector3 posLeft;
-            UnityEngine.XR.InputDevice device = InputDevices.GetDeviceAtXRNode(eye == Camera.StereoscopicEye.Left ? XRNode.LeftEye : XRNode.RightEye);
-            if (device.isValid)
-            {
-                if (device.TryGetFeatureValue(eye == Camera.StereoscopicEye.Left ? UnityEngine.XR.CommonUsages.leftEyePosition : UnityEngine.XR.CommonUsages.rightEyePosition, out posLeft))
-                    return posLeft;
-            }
-            return default(Vector3);
-        }
-
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.Setup))]
-        static void PortalRenderFix(ref Camera mainCam)
-        {
-            //mainCam = Vars.MainCamera;
-        }
-        [HarmonyPrefix]
-        [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.LateUpdate))]
-        static void PortalRenderFix2(PortalManagerV2 __instance)
-        {
-            //__instance.mainCamera = Vars.MainCamera;
-        }
     }
 }
