@@ -28,9 +28,18 @@ public static class MirrorFix
         var codes = new List<CodeInstruction>(instructions);
         for (int i = 0; i < codes.Count; i++)
         {
+            if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(PortalRenderV2), nameof(PortalRenderV2.mainCam)))
+            {
+                codes[i - 1].opcode = OpCodes.Nop; // remove ldarg.0
+                codes[i].opcode = OpCodes.Ldarg_1; //Use enter cam instead
+                codes[i].operand = null;
+            }
+        }
+        for (int i = 0; i < codes.Count; i++)
+        {
             if (codes[i].opcode == OpCodes.Callvirt && (MethodInfo)codes[i].operand == targetMethod)
             {
-                codes.Insert(i++, new CodeInstruction(OpCodes.Ldloc_S, 22));
+                codes.Insert(i++, new CodeInstruction(OpCodes.Ldloc_S, 22)); //Get portal object
                 codes[i].opcode = OpCodes.Call;
                 codes[i].operand = replacementMethod;
             }
@@ -39,17 +48,17 @@ public static class MirrorFix
         return codes.AsEnumerable();
     }
 
-    public static Matrix4x4 CorrectedMirrorMatrix(Camera mainCam, Vector4 clipPlane, Portal portalObject)
+    public static Matrix4x4 CorrectedMirrorMatrix(Camera enterCam, Vector4 clipPlane, Portal portalObject)
     {
-        if (!portalObject.mirror) return mainCam.CalculateObliqueMatrix(clipPlane);
+        if (!portalObject.mirror) return enterCam.CalculateObliqueMatrix(clipPlane);
 
-        Matrix4x4 originalProj = mainCam.projectionMatrix;
+        Matrix4x4 originalProj = enterCam.projectionMatrix;
         Matrix4x4 flippedProj = originalProj;
         flippedProj[0, 2] = -flippedProj[0, 2]; //Inverts the left/right VR skew
 
-        mainCam.projectionMatrix = flippedProj;
-        Matrix4x4 correctedObliqueMatrix = mainCam.CalculateObliqueMatrix(clipPlane);
-        mainCam.projectionMatrix = originalProj;
+        enterCam.projectionMatrix = flippedProj;
+        Matrix4x4 correctedObliqueMatrix = enterCam.CalculateObliqueMatrix(clipPlane);
+        enterCam.projectionMatrix = originalProj;
 
         return correctedObliqueMatrix;
     }

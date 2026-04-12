@@ -131,16 +131,25 @@ namespace Plugin.Systems.VRCamera.Patches
             leftEyeRender.pph = leftEyePP;
             leftEyePP.mainCam = CameraConverterP.leftEye;
         }
+
+        private static readonly AccessTools.FieldRef<PortalManagerV2, Action<Camera>> RenderFromRef =
+            AccessTools.FieldRefAccess<PortalManagerV2, Action<Camera>>("RenderFrom"); //Reflection is slow so we only do it once
+
         [HarmonyPostfix]
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnPreRenderCallback))]
         static void OnPreRenderCallbackRight(PortalManagerV2 __instance, Camera cam)
         {
-            if (__instance == null || PortalManagerV2.Instance == null) return;
+            if (__instance == null || PortalManagerV2.Instance == null || rightEyePP == null) return;
 
             PostProcessV2_Handler.Instance = rightEyePP;
             rightEyeRender.pph = rightEyePP;
             rightEyePP.mainCam = CameraConverterP.rightEye;
-            if (cam == CameraConverterP.rightEye) rightEyeRender.Render(cam);
+            if (cam == CameraConverterP.rightEye)
+            {
+                rightEyeRender.Render(cam);
+                RenderFromRef(__instance).Invoke(cam); //Needed so always look at camera works from both eyes
+            }
+
             PostProcessV2_Handler.Instance = leftEyePP;
         }
 
@@ -178,7 +187,6 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PostProcessV2_Handler), nameof(PostProcessV2_Handler.OnPreRenderCallback))]
         static void FixRed(PostProcessV2_Handler __instance, Camera cam)
         {
-            if (cam == __instance.mainCam) __instance.RenderSkyboxes();
             __instance.usedComputeShadersAtStart = false;
         }
         //Other hand done in VRArmTransformer (bad ik)

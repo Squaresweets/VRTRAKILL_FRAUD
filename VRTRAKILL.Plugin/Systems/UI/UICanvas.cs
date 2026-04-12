@@ -31,7 +31,7 @@ namespace Plugin.Systems.UI
             LastCamFwd = Vector3.back * Distance;
             UpdatePos();
         }
-        public void Update()
+        public void LateUpdate()
         {
             if (!Vars.IsPlayerFrozen) UpdatePos(); else ResetPos();
             transform.position = Vars.MainCamera.transform.position + LastCamFwd;

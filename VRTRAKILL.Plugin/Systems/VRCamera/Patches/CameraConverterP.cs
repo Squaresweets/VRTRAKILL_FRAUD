@@ -211,5 +211,14 @@ namespace Plugin.Systems.VRCamera.Patches
             __instance.GetComponentsInChildren<MeshRenderer>(true).ToList().ForEach(x => UnityEngine.Object.Destroy(x));
             __instance.GetComponentsInChildren<GunColorGetter>(true).ToList().ForEach(x => UnityEngine.Object.Destroy(x));
         }
+
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(CheatsController), nameof(CheatsController.Update))]
+        static void RemoveCheatsCanvas(CheatsController __instance)
+        {
+            __instance.cheatsEnabledPanel.SetActive(false);
+            __instance.cheatsInfoPanel.SetActive(false);
+        }
     }
 }

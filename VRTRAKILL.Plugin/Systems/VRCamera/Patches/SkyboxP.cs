@@ -57,5 +57,24 @@ namespace Plugin.Systems.VRCamera.Patches
 
             return false;
         }
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(SkyboxEnabler), nameof(SkyboxEnabler.Activate))]
+        static bool EnablerFix(SkyboxEnabler __instance)
+        {
+            if (__instance.oneTime && __instance.activated) return false;
+            __instance.activated = true;
+
+            //Do both eyes :D
+            CameraClearFlags flags = (!__instance.disable) ? CameraClearFlags.Skybox : CameraClearFlags.Color;
+            if (CameraConverterP.leftEye != null)
+                CameraConverterP.leftEye.clearFlags = flags;
+            if (CameraConverterP.rightEye != null)
+                CameraConverterP.rightEye.clearFlags = flags;
+
+            if (__instance.changeSkybox)
+                RenderSettings.skybox = new Material(__instance.changeSkybox);
+
+            return false;
+        }
     }
 }

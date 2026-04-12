@@ -1,4 +1,5 @@
-﻿using Plugin.Systems.VRCamera.Patches;
+﻿using Plugin.Patches.ULTRAKILL;
+using Plugin.Systems.VRCamera.Patches;
 using ULTRAKILL.Portal;
 using UnityEngine;
 using Valve.VR;
@@ -85,6 +86,8 @@ namespace Plugin.Systems.Controllers
                 CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.leftPos, VRControllerLocations.Instance.leftRot, true);
             else
                 CameraConverterP.PortalAwareSetTransformFromBody(transform, VRControllerLocations.Instance.rightPos, VRControllerLocations.Instance.rightRot, true);
+
+            VRGunsController.Instance.LateUpdate(); //Annoying but stuff was desyncing
 
             // controller-based ui interaction
             if (Vars.Config.UIInteraction.ControllerBased) CPRaycast();
