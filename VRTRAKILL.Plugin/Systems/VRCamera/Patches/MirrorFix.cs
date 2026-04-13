@@ -11,15 +11,6 @@ namespace Plugin.Systems.VRCamera.Patches;
 [HarmonyPatch(typeof(PortalRenderV2), nameof(PortalRenderV2.SetupRenderData))]
 public static class MirrorFix
 {
-    //Goes through and updates this section:
-    /*
-            else
-            {
-                Vector4 vector3 = transpose2 * vector2;
-                projectionMatrix2 = mainCam.CalculateObliqueMatrix(vector3 * -1f);
-            }
-    */
-    // Of portalrenderv2. Needed because the projection matrix isn't symetric for vr, so when they get flipped it looks wrong
     static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
     {
         MethodInfo targetMethod = AccessTools.Method(typeof(Camera), nameof(Camera.CalculateObliqueMatrix));
@@ -28,37 +19,58 @@ public static class MirrorFix
         var codes = new List<CodeInstruction>(instructions);
         for (int i = 0; i < codes.Count; i++)
         {
-            if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(PortalRenderV2), nameof(PortalRenderV2.mainCam)))
+            if (codes[i].opcode == OpCodes.Ldfld && (FieldInfo)codes[i].operand == AccessTools.Field(typeof(PortalRenderV2), nameof(PortalRenderV2.defaultProjectionMatrix)))
             {
-                codes[i - 1].opcode = OpCodes.Nop; // remove ldarg.0
-                codes[i].opcode = OpCodes.Ldarg_1; //Use enter cam instead
-                codes[i].operand = null;
+                codes[i - 1] = new CodeInstruction(OpCodes.Nop);
+                codes[i] = new CodeInstruction(OpCodes.Ldloc_S, 9); //Get "Projection matrix" instead lol
             }
-        }
-        for (int i = 0; i < codes.Count; i++)
-        {
+            // Find the call to CalculateObliqueMatrix
             if (codes[i].opcode == OpCodes.Callvirt && (MethodInfo)codes[i].operand == targetMethod)
             {
-                codes.Insert(i++, new CodeInstruction(OpCodes.Ldloc_S, 22)); //Get portal object
+                // Stack contains: [Camera mainCam, Vector4 clipPlane]
+
+                // 1. Push the Portal object (Local 22)
+                codes.Insert(i++, new CodeInstruction(OpCodes.Ldloc_S, 22));
+
+                // 2. Push inMirroredSpace. 
+                // CRITICAL: If mirrors are broken, change this 7 to an 8!
+                codes.Insert(i++, new CodeInstruction(OpCodes.Ldarg_S, 7));
+
+                // 3. Swap the callvirt to our static method
                 codes[i].opcode = OpCodes.Call;
                 codes[i].operand = replacementMethod;
             }
         }
-
         return codes.AsEnumerable();
     }
 
-    public static Matrix4x4 CorrectedMirrorMatrix(Camera enterCam, Vector4 clipPlane, Portal portalObject)
+    public static Matrix4x4 CorrectedMirrorMatrix(Camera mainCam, Vector4 clipPlane, Portal portalObject, bool inMirroredSpace)
     {
-        if (!portalObject.mirror) return enterCam.CalculateObliqueMatrix(clipPlane);
+        // If the XOR result is True, the space we are entering is physically mirrored.
+        // Logic: (Not Mirrored + Entering Mirror = True) | (Mirrored + Entering Portal = True)
+        // (Mirrored + Entering Mirror = False) <- Reflections cancel out!
+        bool destinationIsMirrored = inMirroredSpace ^ portalObject.mirror;
 
-        Matrix4x4 originalProj = enterCam.projectionMatrix;
-        Matrix4x4 flippedProj = originalProj;
-        flippedProj[0, 2] = -flippedProj[0, 2]; //Inverts the left/right VR skew
+        // Use the base projection matrix of the camera.
+        // DO NOT use Camera.projectionMatrix if you have already modified it this frame; 
+        // Unity's CalculateObliqueMatrix needs the 'clean' eye frustum.
+        Matrix4x4 baseProj = mainCam.projectionMatrix;
 
-        enterCam.projectionMatrix = flippedProj;
-        Matrix4x4 correctedObliqueMatrix = enterCam.CalculateObliqueMatrix(clipPlane);
-        enterCam.projectionMatrix = originalProj;
+        if (!destinationIsMirrored)
+        {
+            return mainCam.CalculateObliqueMatrix(clipPlane);
+        }
+
+        // --- VR SKEW FLIP ---
+        // We flip the horizontal asymmetry [0, 2] to match the reflected eye perspective.
+        Matrix4x4 flippedProj = baseProj;
+        flippedProj[0, 2] = -flippedProj[0, 2];
+
+        // Swap, calculate, and restore. 
+        // This ensures we don't 'leak' the flipped projection into other portal calculations.
+        mainCam.projectionMatrix = flippedProj;
+        Matrix4x4 correctedObliqueMatrix = mainCam.CalculateObliqueMatrix(clipPlane);
+        mainCam.projectionMatrix = baseProj;
 
         return correctedObliqueMatrix;
     }
