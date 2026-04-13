@@ -33,32 +33,32 @@ namespace Plugin.Patches.ULTRAKILL;
         __instance.tr.enabled = false;
     }
 
-    //[HarmonyPrefix]
-    //[HarmonyPatch(nameof(Punch.Update))]
-    //private static void Update(Punch __instance, out bool __state)
-    //{
-    //    __state = __instance.ready;
-    //    if (MonoSingleton<OptionsManager>.Instance.paused) return;
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(Punch.Update))]
+    private static void Update(Punch __instance, out bool __state)
+    {
+        __state = __instance.ready;
+        if (MonoSingleton<OptionsManager>.Instance.paused) return;
 
-    //    if (Vars.NDHC.Speed >= Vars.Config.MBP.PunchingSpeed
-    //        && MonoSingleton<InputManager>.Instance.InputSource.Punch.IsPressed
-    //        && __instance.ready && !__instance.shopping
-    //        && __instance.fc.activated
-    //        && !GameStateManager.Instance.PlayerInputLocked)
-    //    {
-    //        __instance.heldAction = MonoSingleton<InputManager>.Instance.InputSource.Punch.Action;
-    //        __instance.PunchStart();
-    //    }
-    //    __state = __instance.ready;
-    //    __instance.ready = false; //we will set this back how it should be after
-    //    //We can now continue with confidence as ready is now false so we can't have another punch
-    //}
-    //[HarmonyPostfix]
-    //[HarmonyPatch(nameof(Punch.Update))]
-    //private static void UpdateEnd(Punch __instance, bool __state)
-    //{
-    //    __instance.ready = __state;
-    //}
+        if (Vars.NDHC.Speed * 2 >= Vars.Config.MBP.PunchingSpeed
+            && MonoSingleton<InputManager>.Instance.InputSource.Punch.IsPressed
+            && __instance.ready && !__instance.shopping
+            && __instance.fc.activated
+            && !GameStateManager.Instance.PlayerInputLocked)
+        {
+            __instance.heldAction = MonoSingleton<InputManager>.Instance.InputSource.Punch.Action;
+            __instance.PunchStart();
+        }
+        __state = __instance.ready;
+        __instance.ready = false; //we will set this back how it should be after
+        //We can now continue with confidence as ready is now false so we can't have another punch
+    }
+    [HarmonyPostfix]
+    [HarmonyPatch(nameof(Punch.Update))]
+    private static void UpdateEnd(Punch __instance, bool __state)
+    {
+        __instance.ready = __state;
+    }
     [HarmonyTranspiler]
     [HarmonyPatch(nameof(Punch.ActiveFrame))] //Also punch success?
     static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
@@ -126,20 +126,20 @@ namespace Plugin.Patches.ULTRAKILL;
     }
     //Ended up deciding that it felt better to go where you looked
     //And cause i couldnt get it to feel nice and i cba
-    //[HarmonyPrefix]
-    //[HarmonyPatch(nameof(Punch.GetParryLookTarget))]
-    //private static bool GetParryLookTarget(ref Vector3 __result)
-    //{
-    //    Vector3 vector = Vars.NonDominantHand.transform.forward;
+    [HarmonyPrefix]
+    [HarmonyPatch(nameof(Punch.GetParryLookTarget))]
+    private static bool GetParryLookTarget(ref Vector3 __result)
+    {
+        Vector3 vector = Vars.NonDominantHand.transform.forward;
 
-    //    if ((bool)MonoSingleton<CameraFrustumTargeter>.Instance && (bool)MonoSingleton<CameraFrustumTargeter>.Instance.CurrentTarget && MonoSingleton<CameraFrustumTargeter>.Instance.IsAutoAimed)
-    //    {
-    //        vector = MonoSingleton<CameraFrustumTargeter>.Instance.CurrentTarget.bounds.center - MonoSingleton<CameraController>.Instance.transform.position;
-    //    }
-    //    if (Physics.Raycast(Vars.NDHC.transform.position, vector, out var hitInfo, float.PositiveInfinity, LayerMaskDefaults.Get(LMD.Enemies), QueryTriggerInteraction.Ignore))
-    //        __result = hitInfo.point;
+        if ((bool)MonoSingleton<CameraFrustumTargeter>.Instance && (bool)MonoSingleton<CameraFrustumTargeter>.Instance.CurrentTarget && MonoSingleton<CameraFrustumTargeter>.Instance.IsAutoAimed)
+        {
+            vector = MonoSingleton<CameraFrustumTargeter>.Instance.CurrentTarget.bounds.center - MonoSingleton<CameraController>.Instance.transform.position;
+        }
+        if (Physics.Raycast(Vars.NDHC.transform.position, vector, out var hitInfo, float.PositiveInfinity, LayerMaskDefaults.Get(LMD.Enemies), QueryTriggerInteraction.Ignore))
+            __result = hitInfo.point;
 
-    //    __result = Vars.NDHC.transform.position + vector * 1000f;
-    //    return false;
-    //}
+        __result = Vars.NDHC.transform.position + vector * 1000f;
+        return false;
+    }
 }

@@ -45,7 +45,7 @@ namespace Plugin.Systems.VRCamera.Patches
         {
             leftEyeRender = __instance.render;
 
-            if(rightEyeRender != null) GameObject.Destroy(rightEyeRender);
+            if (rightEyeRender != null) GameObject.Destroy(rightEyeRender);
             rightEyeRender = __instance.gameObject.AddComponent<PortalRenderV2>();
             rightEyeRender.portalCompositeMaterial = new Material(leftEyeRender.portalCompositeMaterial);
             rightEyeRender.portalMaterial = new Material(leftEyeRender.portalMaterial);
@@ -57,7 +57,7 @@ namespace Plugin.Systems.VRCamera.Patches
             //Copy it all over to a new one lmao
             leftEyePP = PostProcessV2_Handler.Instance;
 
-            if(rightEyePP != null) GameObject.Destroy(rightEyePP);
+            if (rightEyePP != null) GameObject.Destroy(rightEyePP);
             rightEyePP = __instance.gameObject.AddComponent<PostProcessV2_Handler>();
             rightEyePP.postProcessV2_VSRM = new Material(leftEyePP.postProcessV2_VSRM);
             rightEyePP.screenNormal = new Material(leftEyePP.screenNormal);
@@ -74,7 +74,7 @@ namespace Plugin.Systems.VRCamera.Patches
             rightEyePP.paletteCalc = leftEyePP.paletteCalc;
             //Eye set after start
 
-            if(rightEyePortalCam != null) GameObject.Destroy(rightEyePortalCam);
+            if (rightEyePortalCam != null) GameObject.Destroy(rightEyePortalCam);
             rightEyePortalCam = new GameObject("Right portal cam", typeof(Camera)).GetComponent<Camera>();
             rightEyePortalCam.transform.parent = __instance.transform;
             rightEyePortalCam.CopyFrom(__instance.portalCamera);
@@ -139,7 +139,7 @@ namespace Plugin.Systems.VRCamera.Patches
         [HarmonyPatch(typeof(PortalManagerV2), nameof(PortalManagerV2.OnPreRenderCallback))]
         static void OnPreRenderCallbackRight(PortalManagerV2 __instance, Camera cam)
         {
-            if (__instance == null || PortalManagerV2.Instance == null || rightEyePP == null) return;
+            if (__instance == null || cam == null || PortalManagerV2.Instance == null) return;
 
             PostProcessV2_Handler.Instance = rightEyePP;
             rightEyeRender.pph = rightEyePP;
@@ -147,7 +147,7 @@ namespace Plugin.Systems.VRCamera.Patches
             if (cam == CameraConverterP.rightEye)
             {
                 rightEyeRender.Render(cam);
-                RenderFromRef(__instance).Invoke(cam); //Needed so always look at camera works from both eyes
+                RenderFromRef(__instance)?.Invoke(cam); //Needed so always look at camera works from both eyes
             }
 
             PostProcessV2_Handler.Instance = leftEyePP;
@@ -190,7 +190,9 @@ namespace Plugin.Systems.VRCamera.Patches
             __instance.usedComputeShadersAtStart = false;
         }
         //Other hand done in VRArmTransformer (bad ik)
-        [HarmonyPrefix] [HarmonyPatch(typeof(WeaponPos), nameof(WeaponPos.Start))] static void AddWeaponRenderers(WeaponPos __instance)
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(WeaponPos), nameof(WeaponPos.Start))]
+        static void AddWeaponRenderers(WeaponPos __instance)
         {
             if (!__instance.GetComponent<PortalAwareRenderer>())
                 __instance.gameObject.AddComponent<PortalAwareRenderer>().objectType = PortalAwareRenderer.ObjectType.Player;
