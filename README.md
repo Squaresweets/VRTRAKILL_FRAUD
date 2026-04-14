@@ -16,6 +16,7 @@ Annoyingly just before I released this beta a hotfix was released that breaks st
 ## Known issues:
 - Portals seen in mirrors don't render properly
 - Minor flickering when going through portals
+- Whiplash is buggy through portals
 - Haven't even touched the avatarRig, weapon wheel or 4-S
 - Oil and blood (Except for 7-S) don't render due to the new rendering system
 - HUD sometimes disapears
