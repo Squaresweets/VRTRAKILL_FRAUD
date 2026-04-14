@@ -12,6 +12,7 @@ In the steam console. A good tutorial can be found [here](https://www.youtube.co
 ## Intro:
 This is a fork of the VRTRAKILL mod with support for Fraud. If you are looking for ULTRA_REVAMP support, there is a release for that.
 Annoyingly just before I released this beta a hotfix was released that breaks stuff and I don't have time currently to fix it, sorry!
+
 When recording videos, I'd recommend you record the Steam VR view instead of the game itself.
 
 ## Known issues:
