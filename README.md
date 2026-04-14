@@ -12,11 +12,13 @@ In the steam console. A good tutorial can be found [here](https://www.youtube.co
 ## Intro:
 This is a fork of the VRTRAKILL mod with support for Fraud. If you are looking for ULTRA_REVAMP support, there is a release for that.
 Annoyingly just before I released this beta a hotfix was released that breaks stuff and I don't have time currently to fix it, sorry!
+When recording videos, I'd recommend you record the Steam VR view instead of the game itself.
 
 ## Known issues:
 - Portals seen in mirrors don't render properly
 - Minor flickering when going through portals
 - Whiplash is buggy through portals
+- Desktop camera would require a third portal renderer
 - Haven't even touched the avatarRig, weapon wheel or 4-S
 - Oil and blood (Except for 7-S) don't render due to the new rendering system
 - HUD sometimes disapears
