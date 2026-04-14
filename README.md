@@ -1,21 +1,27 @@
-# VRTRAKILL_REVAMP
+# VRTRAKILL_FRAUD
 
-I put this together in a week, there is a lot of hacky stuff in my changes I'd certainly not recommend putting all the changes in, but there is certainly some useful code, for example the new Plugin.cs and the transpilers. Also the build system isn't great, It's held together by hopes and dreams is what im saying. If you manage to get it to compile on your PC I will be impressed.
+YOUTUBE VID HERE
 
-The hardest bit was getting it to actually run, the patcher wasn't working so I manually went into globalgamemanagers with uabea and added the enabled vr devices ("Oculus", "OpenVR", "None") to BuildSettings. All the dlls had to be gotten from the exact right version of unity and a couple had to be publicised. I also had to add the UnitySubsystems folder to ULTRAKILL_Data and entirelly rewrite the vr initilisation stuff in Plugin.cs.
+## IMPORTANT:
+It is neccessary to downgrade Ultrakill to the first fraud hotfix for this to work. You can install that using:
+`download_depot 1229490 1229491 5628746843149106870`
+In the steam console. A good tutorial can be found [here](https://www.youtube.com/watch?v=vfXyy3KWqAI). You'll probably want to bring your saves across as well.
+
+## Intro:
+This is a fork of the VRTRAKILL mod with support for Fraud. If you are looking for ULTRA_REVAMP support, there is a release for that.
+Annoyingly just before I released this beta a hotfix was released that breaks stuff and I don't have time currently to fix it, sorry!
 
 ## Known issues:
+- Portals seen in mirrors don't render properly
+- Minor flickering when going through portals
 - Haven't even touched the avatarRig, weapon wheel or 4-S
 - Oil and blood (Except for 7-S) don't render due to the new rendering system
-- Limbo skybox doesn't properly line up in VR
 - HUD sometimes disapears
 - No models of enemies in shop
 - Sooooo many other bugs, I haven't played through the whole thing, it doesn't have nearly as much polish as the previous version
 
 ## Installation:
-Drag the ULTRAKILL_COPYTOROOT folder to the root of your game.
+Drag the contents of the ULTRAKILL_COPYTOROOT folder to the root of your game. You should get a message asking if you want to replace the files in the destination, say yes. You will obviously need BepInEx if you haven't already got it.
 
 ## Building:
 Build process is pretty messy, I just got everything into the folders manually and got vs to copy over the dlls when I changed them. I used vscode 2022 so just open the .sln file in the root.
-
-I'd love to work on this mod more in the futhre when I have more time, also yes I know this will all be out of date when Fraud comes out, but I really wanted to play ULTRA_REVAMP in vr sooo....
