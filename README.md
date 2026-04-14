@@ -1,13 +1,13 @@
 # VRTRAKILL_FRAUD
 
-[![Youtube link](https://img.youtube.com/vi/y1rOdIO-YTQ/0.jpg)](https://www.youtube.com/watch?v=y1rOdIO-YTQ)
-
-## IMPORTANT:
+## 🚨 IMPORTANT: 🚨
 It is neccessary to downgrade Ultrakill to the first fraud hotfix for this to work. You can install that using:
 
 `download_depot 1229490 1229491 5628746843149106870`
 
 In the steam console. A good tutorial can be found [here](https://www.youtube.com/watch?v=vfXyy3KWqAI). You'll probably want to bring your saves across as well.
+
+[![Youtube link](https://img.youtube.com/vi/y1rOdIO-YTQ/0.jpg)](https://www.youtube.com/watch?v=y1rOdIO-YTQ)
 
 ## Intro:
 This is a fork of the VRTRAKILL mod with support for Fraud. If you are looking for ULTRA_REVAMP support, there is a release for that.
