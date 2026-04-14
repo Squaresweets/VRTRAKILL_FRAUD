@@ -1,6 +1,6 @@
 # VRTRAKILL_FRAUD
 
-YOUTUBE VID HERE
+[![Youtube link](https://img.youtube.com/vi/y1rOdIO-YTQ/0.jpg)](https://www.youtube.com/watch?v=y1rOdIO-YTQ)
 
 ## IMPORTANT:
 It is neccessary to downgrade Ultrakill to the first fraud hotfix for this to work. You can install that using:
@@ -27,7 +27,7 @@ When recording videos, I'd recommend you record the Steam VR view instead of the
 - Sooooo many other bugs, I haven't played through the whole thing, it doesn't have nearly as much polish as the previous version
 
 ## Installation:
-Drag the contents of the ULTRAKILL_COPYTOROOT folder to the root of your game. You should get a message asking if you want to replace the files in the destination, say yes. You will obviously need BepInEx if you haven't already got it.
+Install from the releaes tab on the right. Drag the contents of the ULTRAKILL_COPYTOROOT folder to the root of your game. You should get a message asking if you want to replace the files in the destination, say yes. You will obviously need BepInEx if you haven't already got it.
 
 ## Building:
 Build process is pretty messy, I just got everything into the folders manually and got vs to copy over the dlls when I changed them. I used vscode 2022 so just open the .sln file in the root.
