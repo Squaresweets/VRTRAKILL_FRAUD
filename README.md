@@ -7,6 +7,8 @@ It is neccessary to downgrade Ultrakill to the first fraud hotfix for this to wo
 
 In the steam console. A good tutorial can be found [here](https://www.youtube.com/watch?v=vfXyy3KWqAI). You'll probably want to bring your saves across as well.
 
+If you need help, join the [DISCORD](https://discord.gg/9uxHn2yg3q)!
+
 [![Youtube link](https://img.youtube.com/vi/y1rOdIO-YTQ/0.jpg)](https://www.youtube.com/watch?v=y1rOdIO-YTQ)
 
 ## Intro:
