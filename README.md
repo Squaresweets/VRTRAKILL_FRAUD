@@ -9,7 +9,7 @@ In the steam console. A good tutorial can be found [here](https://www.youtube.co
 
 If you need help, join the [DISCORD](https://discord.gg/9uxHn2yg3q)!
 
-[![Youtube link](https://img.youtube.com/vi/y1rOdIO-YTQ/0.jpg)](https://www.youtube.com/watch?v=y1rOdIO-YTQ)
+[![Youtube link](https://img.youtube.com/vi/bWkGRw43CUU/0.jpg)](https://www.youtube.com/watch?v=bWkGRw43CUU)
 
 ## Intro:
 This is a fork of the VRTRAKILL mod with support for Fraud. If you are looking for ULTRA_REVAMP support, there is a release for that.
