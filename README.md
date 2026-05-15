@@ -5,7 +5,7 @@ It is neccessary to downgrade Ultrakill to the first fraud hotfix for this to wo
 
 `download_depot 1229490 1229491 5628746843149106870`
 
-In the steam console. A good tutorial can be found [here](https://www.youtube.com/watch?v=vfXyy3KWqAI). You'll probably want to bring your saves across as well.
+In the steam console. 🚨WATCH THE TUTORIAL BELOW!!!🚨
 
 If you need help, join the [DISCORD](https://discord.gg/9uxHn2yg3q)!
 
